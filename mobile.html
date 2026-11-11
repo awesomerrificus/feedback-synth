@@ -4633,6 +4633,14 @@ $('goBtn').closest('.row').after(sw);
 window.addEventListener('orientationchange',()=>setTimeout(fitCanvas,250));
 setTimeout(fitCanvas,50);
 })();
+/* iPhone file picker: list the audio types by extension, or iOS can grey out tracks in Files */
+(function(){
+const $=id=>document.getElementById(id);
+const inp=$('audioFile'); if (inp) inp.accept='audio/*,video/*,.mp3,.m4a,.aac,.wav,.aif,.aiff,.caf,.flac,.ogg,.opus,.mp4,.mov,.m4v';
+const pl=$('player'); if (pl) pl.addEventListener('error',()=>{ if (pl.getAttribute('src')) $('trackName').textContent='This phone could not play that file. Try MP3, M4A/AAC or WAV.'; });
+const n=document.createElement('div'); n.className='small'; n.style.margin='4px 2px'; n.textContent='Tracks come from the Files app. Songs in Apple Music or Voice Memos need to be saved to Files first (Share › Save to Files).';
+if ($('trackName')) $('trackName').after(n);
+})();
 
 </script>
 </body>
