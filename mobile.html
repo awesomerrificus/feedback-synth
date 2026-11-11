@@ -367,6 +367,7 @@ label.small,.small{font-size:12px}
         <button id="clearPool">Clear</button>
       </div>
       <div class="row"><select id="genSel" style="flex:1;min-width:0"></select></div>
+      <div class="row" id="oilRow"><span class="small">Liquid light</span><label class="small">Set <select id="oilPal"></select></label><label class="small">Oil 1 <input type="color" id="oilC1"></label><label class="small">Oil 2 <input type="color" id="oilC2"></label><label class="small">Oil 3 <input type="color" id="oilC3"></label><label class="small">Light <input type="color" id="oilBg"></label><label class="small"><input type="checkbox" id="oilDisc"> Projector circle</label></div>
       <div class="row" id="orbRow"><span class="small">Moiré orbs</span><label class="small">Shape <select id="orbShape"><option value="auto">Auto (changes every 4 bars)</option><option value="sphere">Sphere</option><option value="ribbed">Ribbed orb</option><option value="wavy">Wavy blob</option><option value="bubbles">Bubbles</option><option value="horizon">Horizon glow</option><option value="tunnel">Spiral tunnel</option></select></label><label class="small">Palette <select id="orbPal"></select></label></div>
       <div class="row" id="inkRow"><span class="small">Ink bloom colours</span><label class="small">Ink <input type="color" id="inkC1"></label><label class="small">Ink 2 <input type="color" id="inkC2"></label><label class="small">Paper <input type="color" id="inkBg"></label><button id="inkReset" title="Back to black ink on white">Reset</button></div>
       <div class="row"><button id="genAdd">Add generative source</button><button id="genAll">Add all</button></div>
@@ -501,7 +502,7 @@ label.small,.small{font-size:12px}
       <p><b>Live</b>: pick your audio interface under Input, then Live input. Use the tap clock if the room is too noisy for beat detection. Open the output window on the projector. MIDI learn: press it, click any dashed control, move a knob or hit a pad.</p>
       <p><b>Effect modules</b> run after the main look. <i>Video feedback</i> feeds each frame back into itself zoomed, rotated and shifted, for tunnels and spirals. <i>Video delay/echo</i> keeps the last 120 frames and layers up to 4 delayed copies (taps) on top, timed in ms or synced to the beat (tap tempo or detected BPM). <i>Echo feedback</i> sends the echoes back into the delay so they repeat and fade. Amount, mix and feedback can follow the music like any other effect, and every module setting is saved in scenes.</p>
       <p><b>Lens, analog and motion effects</b> run last, on the finished picture: pixel drift (the picture as dots, squares, an LED grid or halftone; each cell keeps its colour while it wanders and scatters with the sound; shape is set in its panel), dot lens (a drifting grid of little ball lenses; more = bigger, inverted discs), fisheye, handheld shake, dirty lens, film look, bloom, lens fringing, depth blur, VHS, CRT, datamosh smear (strongest just after a cut), mirror tiles, slit-scan, stutter/strobe and neon edges.</p>
-      <p><b>Generative sources</b> (section 2) are algorithms that draw live, driven by the music, and join your pool like any clip: Moiré orbs (glowing fine-line spheres, ribbed orbs, wavy blobs, bubbles, a horizon glow or a spiral tunnel: bass swells them, mids ripple the edges, highs make the lines shimmer; pick shape and palette under the source list, or leave both on Auto to change with the music), Ink bloom (ink-in-water strands that burst on kicks, turn with the mids and drift with loud passages; pick its ink and paper colours under the source list), Woven ribbons, Sliced weave and Mirrored chevrons (op-art weaves whose rows slide on the beat), Disorder grid (after Vera Molnár / Georg Nees), Random walk (after Frieder Nake), Oscillons (your track as an oscilloscope figure, after Ben Laposky), Harmonic dots (after John Whitney), Cube studies (after Manfred Mohr), Chance collage and Cut-up strips (built from your own images and clips, after Arp, Höch and Burroughs), Rotoreliefs (after Duchamp), Rule drawing (after Sol LeWitt), Squares &amp; stripes (after Albers, Stella and Agnes Martin) and Event score (your own words, after Fluxus). They're remembered between sessions.</p>
+      <p><b>Generative sources</b> (section 2) are algorithms that draw live, driven by the music, and join your pool like any clip: Liquid light (a 60s oil-projector light show: coloured oils merge and split in a wobbling dish, swirl with the mids, swell with the bass and get shoved on kicks; pick a colour set or your own three oils and light colour, with or without the projector circle, under the source list), Moiré orbs (glowing fine-line spheres, ribbed orbs, wavy blobs, bubbles, a horizon glow or a spiral tunnel: bass swells them, mids ripple the edges, highs make the lines shimmer; pick shape and palette under the source list, or leave both on Auto to change with the music), Ink bloom (ink-in-water strands that burst on kicks, turn with the mids and drift with loud passages; pick its ink and paper colours under the source list), Woven ribbons, Sliced weave and Mirrored chevrons (op-art weaves whose rows slide on the beat), Disorder grid (after Vera Molnár / Georg Nees), Random walk (after Frieder Nake), Oscillons (your track as an oscilloscope figure, after Ben Laposky), Harmonic dots (after John Whitney), Cube studies (after Manfred Mohr), Chance collage and Cut-up strips (built from your own images and clips, after Arp, Höch and Burroughs), Rotoreliefs (after Duchamp), Rule drawing (after Sol LeWitt), Squares &amp; stripes (after Albers, Stella and Agnes Martin) and Event score (your own words, after Fluxus). They're remembered between sessions.</p>
       <p><b>Scenes</b> store every setting in sections 3 and 4 (mappings, cuts, blend, crossfade, beat sensitivity). They're kept in this browser; use Export to save them to a file you can back up, share or Import on another computer. Each scene gets a button under Live performance that you can map to a MIDI pad.</p>
       <p>Everything runs on your computer; files never leave it.</p>
     </details>
@@ -3677,6 +3678,7 @@ const GENS = {
   'Mirrored chevrons': { credit:'op-art weave, mirrored', make(){ return chevronGen(); }},
   'Ink bloom': { credit:'ink in water, particle flow', make(){ return inkGen(); }},
   'Moiré orbs': { credit:'fine-line gradient shapes', make(){ return orbGen(); }},
+  'Liquid light': { credit:'60s oil projector light show', make(){ return oilGen(); }},
 };
 /* ---- op-art ribbons: shared helpers ---- */
 function palMix(P,v){ v=((v%1)+1)%1*P.length; const i=Math.floor(v), f=v-i, a=P[i], b=P[(i+1)%P.length], e=f*f*(3-2*f);
@@ -3848,6 +3850,77 @@ function orbGen(){
   const o=S.orb||{shape:'auto',pal:'auto'}; $('orbShape').value=o.shape; ps.value=o.pal;
   const upd=()=>{ S.orb={shape:$('orbShape').value, pal:ps.value}; save(); };
   $('orbShape').onchange=upd; ps.onchange=upd;
+})();
+/* ---- liquid light: coloured oils in a glass dish on an overhead projector. Metaball blobs per oil merge and split,
+   swirl with the mids, swell with the bass, and get shoved around on kicks like someone rocking the dish ---- */
+const OIL_SETS={
+  'Fillmore':   {c1:'#ff2a6d', c2:'#ffcc00', c3:'#00b3ff', bg:'#2b0a3d'},
+  'Acid':       {c1:'#7cff00', c2:'#ff00c8', c3:'#ffee00', bg:'#14002a'},
+  'Sunburst':   {c1:'#ff4500', c2:'#ffb000', c3:'#d1007a', bg:'#3a0612'},
+  'Deep sea':   {c1:'#00e5c8', c2:'#3d5cff', c3:'#b04dff', bg:'#020a24'},
+  'Lava lamp':  {c1:'#ff3b1f', c2:'#ff9a1f', c3:'#ffd84a', bg:'#4a0030'},
+  'Kaleido':    {c1:'#ff1f4b', c2:'#1fff9a', c3:'#1f6bff', bg:'#f2e6c8'},
+};
+function oilCols(){ const k=S.oil||{}, d=OIL_SETS.Fillmore; return {c1:k.c1||d.c1, c2:k.c2||d.c2, c3:k.c3||d.c3, bg:k.bg||d.bg, disc:k.disc!==false}; }
+function oilGen(){
+  let L=null, cv=null, cx=null, img=null, W=0, H=0, t=0, spin=0, wave=0;
+  return { draw(g,w,h,c){
+    const A=c.A, K=oilCols(), coarse=matchMedia('(pointer:coarse)').matches;
+    if (!L){ W=coarse?150:200; H=Math.max(40,Math.round(W*h/w)); cv=document.createElement('canvas'); cv.width=W; cv.height=H; cx=cv.getContext('2d'); img=cx.createImageData(W,H);
+      // three oils (a few big pools plus satellites) and a fourth layer of small clear water bubbles
+      L=[0,1,2,3].map(k=>{ const n=k<3?7+((c.rnd()*4)|0):14; return Array.from({length:n},(_,i)=>({x:c.rnd()*W, y:c.rnd()*H, vx:(c.rnd()-.5)*4, vy:(c.rnd()-.5)*4,
+        r:(k<3?(i<2?.15+c.rnd()*.08:.03+c.rnd()*c.rnd()*.09):.012+c.rnd()*.03)*Math.min(W,H), ph:c.rnd()*6.28})); }); }
+    t+=c.dt*(.5+c.speed); spin+=c.dt*(.08+A.mid*.6)*(.5+c.speed); wave+=c.dt*(.6+A.high*3);
+    const ox=W/2, oy=H/2, kick=c.beat?1:(c.onset?.45:0);
+    // move the blobs: slow drift, a swirl around the centre, a pull back from the edges, and a shove on kicks
+    L.forEach((layer,li)=>{ const dir=c.rnd()*6.28, dirS=li%2?-1:1;
+      for (const b of layer){ const dx=b.x-ox, dy=b.y-oy;
+        b.vx+=(-dy*.04*dirS*(.3+A.mid)+Math.sin(t*.7+b.ph)*1.2-dx*.03)*c.dt*6;
+        b.vy+=( dx*.04*dirS*(.3+A.mid)+Math.cos(t*.6+b.ph*1.3)*1.2-dy*.03)*c.dt*6;
+        if (kick){ b.vx+=Math.cos(dir+b.ph*.3)*kick*(6+A.bass*14); b.vy+=Math.sin(dir+b.ph*.3)*kick*(6+A.bass*14); }
+        const damp=Math.pow(.35,c.dt); b.vx*=damp; b.vy*=damp; b.x+=b.vx*c.dt*3; b.y+=b.vy*c.dt*3;
+        b.x=Math.max(-W*.1,Math.min(W*1.1,b.x)); b.y=Math.max(-H*.1,Math.min(H*1.1,b.y)); } });
+    const col=[K.c1,K.c2,K.c3].map(hx), bg=hx(K.bg), d=img.data, swell=1+A.bass*.55+A.level*.15, rs=L.map((l,li)=>l.map(b=>{ if (li===3) return b.r*b.r; const r=b.r*swell*(1+.12*Math.sin(t*1.3+b.ph)); return r*r; }));
+    const wa=1.2+A.high*2.5, D=Math.min(W,H), discR2=Math.pow(D*.62+(W>H?0:0),2);
+    const bubR=rs[3], bub=L[3];
+    for (let y=0;y<H;y++) for (let x=0;x<W;x++){
+      // the wobbly glass: warp the lookup a little, like heat through the lens
+      const sx=x+Math.sin(y*.11+wave)*wa+Math.sin((x+y)*.05+t)*1.5, sy=y+Math.cos(x*.09-wave*.8)*wa;
+      let r=bg[0], gg=bg[1], bb=bg[2], rim=0, lit=0, cov=0;
+      for (let li=0;li<3;li++){ const layer=L[li], rr=rs[li]; let f=0;
+        for (let j=0;j<layer.length;j++){ const ex=sx-layer[j].x, ey=sy-layer[j].y; f+=rr[j]/(ex*ex+ey*ey+1); }
+        if (f<.55) continue;
+        // inside the oil: dyed light, brightest in the middle, a dark skin at the edge where the oil meets water
+        // marbled dye: swirls of denser and thinner colour inside each pool
+        const a=Math.min(1,(f-.55)*3.2), core=Math.min(1,(f-1)*.6), cc=col[li],
+              mb=.72+.28*Math.sin(sx*.13+li*2+Math.sin(sy*.09-t*.7+li)*3+Math.sin((sx-sy)*.04+t*.4)*2),
+              m=a*(cov>0?.55:.85); cov+=a;
+        r=r*(1-m)+cc[0]*mb*m; gg=gg*(1-m)+cc[1]*mb*m; bb=bb*(1-m)+cc[2]*mb*m;
+        if (core>0){ lit+=core*.45; }
+        const e=1-Math.min(1,Math.abs(f-.62)*7); if (e>0) rim=Math.max(rim,e);
+      }
+      // overlapping oils mix like stacked gels
+      r+=(255-r)*lit*.5; gg+=(255-gg)*lit*.5; bb+=(255-bb)*lit*.5;
+      // little water bubbles trapped in the oil: a clear, brighter centre with a thin dark skin
+      if (cov>.3){ let f=0; for (let j=0;j<bub.length;j++){ const ex=sx-bub[j].x, ey=sy-bub[j].y; f+=bubR[j]/(ex*ex+ey*ey+1); }
+        if (f>.7){ const e=1-Math.min(1,Math.abs(f-.85)*5); rim=Math.max(rim,e*.9); if (f>.95){ const q=Math.min(1,(f-.95)*2)*.6; r+=(bg[0]+60-r)*q; gg+=(bg[1]+60-gg)*q; bb+=(bg[2]+60-bb)*q; } } }
+      const k=1-rim*.75; let o=(y*W+x)*4;
+      let v=1; if (K.disc){ const qx=x-ox, qy=y-oy, q=(qx*qx+qy*qy)/discR2; v=q>1?Math.max(0,1-(q-1)*4):1-q*q*.3; v=v*v*(3-2*v); }
+      d[o]=r*k*v; d[o+1]=gg*k*v; d[o+2]=bb*k*v; d[o+3]=255; }
+    cx.putImageData(img,0,0);
+    g.save(); g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high'; g.fillStyle='#000'; g.fillRect(0,0,w,h);
+    g.drawImage(cv,0,0,w,h);
+    // projector bloom: a soft blown-out glow on loud moments
+    if (A.level>.05){ g.globalCompositeOperation='lighter'; g.globalAlpha=Math.min(.35,A.level*.4); g.drawImage(cv,-w*.02,-h*.02,w*1.04,h*1.04); }
+    g.restore();
+  }}; }
+(function(){
+  const ps=$('oilPal'); ps.innerHTML=Object.keys(OIL_SETS).map(n=>`<option>${n}</option>`).join('')+'<option value="custom">Custom</option>';
+  const set=()=>{ const k=oilCols(); $('oilC1').value=k.c1; $('oilC2').value=k.c2; $('oilC3').value=k.c3; $('oilBg').value=k.bg; $('oilDisc').checked=k.disc;
+    const m=Object.keys(OIL_SETS).find(n=>{ const o=OIL_SETS[n]; return o.c1===k.c1&&o.c2===k.c2&&o.c3===k.c3&&o.bg===k.bg; }); ps.value=m||'custom'; };
+  set(); const upd=()=>{ S.oil={c1:$('oilC1').value, c2:$('oilC2').value, c3:$('oilC3').value, bg:$('oilBg').value, disc:$('oilDisc').checked}; save(); set(); };
+  ['oilC1','oilC2','oilC3','oilBg'].forEach(id=>$(id).addEventListener('input',upd)); $('oilDisc').onchange=upd;
+  ps.onchange=()=>{ if (OIL_SETS[ps.value]){ S.oil=Object.assign({disc:$('oilDisc').checked},OIL_SETS[ps.value]); save(); set(); } };
 })();
 const DEFAULT_WORDS=['listen','wait for the drop','count the beats until silence','turn toward the loudest sound','draw one line','repeat','stand still for one bar','erase everything','now','this is a score'].join('\n');
 function addGen(name){
