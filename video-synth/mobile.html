@@ -3761,7 +3761,7 @@ function oilGen(){
    plays its picture, its sound, or both. Up to three, each a source in the pool.
    ============================================================ */
 var VSM_READY=false;
-const VSM_FPS=20, VSM_COARSE=matchMedia('(pointer:coarse)').matches, VSM_LONG=VSM_COARSE?320:432, VSM_MAX=VSM_COARSE?8:12, VSM_AMAX=60;
+const VSM_FPS=20, VSM_COARSE=matchMedia('(pointer:coarse)').matches||/iPhone|iPad|iPod|Android|CriOS|FxiOS/i.test(navigator.userAgent), VSM_LONG=VSM_COARSE?320:432, VSM_MAX=VSM_COARSE?8:12, VSM_AMAX=60;
 const VSM_DEF={sens:.5, max:16, cuts:'hits', out:'both', vol:1, mode:'beat', speed:1, push:.3, rev:.15, stut:.2, len:1, pp:false, show:false, mute:false, bright:1, cam:VSM_COARSE?'environment':'user'};
 const VSM_COLS=['#7cf2c8','#ff5fa2','#ffcc66','#8fb4ff'];
 function vsmState(){ if (!Array.isArray(S.vsmp)) S.vsmp=[]; for (let i=0;i<3;i++){ const c=S.vsmp[i]||(S.vsmp[i]={show:i===0}); for (const k in VSM_DEF) if (c[k]===undefined) c[k]=VSM_DEF[k]; if (c.cuts==='change'&&!c._v13){ c.cuts='hits'; } c._v13=1; } S.vsmp[0].show=true; }
@@ -3834,8 +3834,8 @@ async function vsmRecStart(sl){
   vsmMsg(sl,'Asking for the camera and microphone…');
   const vc={facingMode:cfg.cam, width:{ideal:640}, height:{ideal:480}};
   try{ stream=await md.getUserMedia({video:vc, audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}}); }
-  catch(e){ try{ stream=await md.getUserMedia({video:vc, audio:false}); noMic=' (no sound: the microphone was not available)'; }
-    catch(e2){ vsmMsg(sl,e2&&e2.name==='NotAllowedError'?'Camera access is blocked for this site: allow it in the browser or phone settings, then reload.':'No camera found: '+((e2&&e2.name)||'error')); return; } }
+  catch(e){ try{ stream=await md.getUserMedia({video:vc, audio:false}); noMic=' (no sound: the mic was not available. Tap Record again to film with the camera app for sound)'; sl.cap=1; }
+    catch(e2){ sl.cap=1; vsmMsg(sl,e2&&e2.name==='NotAllowedError'?'Camera access is blocked for this site: allow it in the browser or phone settings, then reload.':'The camera would not record here ('+((e2&&e2.name)||'error')+'). Tap Record again to film with the camera app instead.'); return; } }
   vsmStopVoice(sl);
   const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.srcObject=new MediaStream(stream.getVideoTracks());
   try{ await v.play(); }catch(e){}
@@ -3999,7 +3999,7 @@ for (const sl of VSM){
   // phones: Record opens the phone's own camera app (it records picture and sound reliably); computers record in the page
   const cap=$('vsmCap'+n); cap.onchange=e=>{ vsmLoad(sl,e.target.files[0]); e.target.value=''; };
   $('vsmRec'+n).onclick=()=>{ if (sl.rec) return vsmRecStop(sl);
-    if (VSM_COARSE){ cap.setAttribute('capture',S.vsmp[sl.i].cam==='user'?'user':'environment'); ensureAudio(); try{ actx.resume(); }catch(e){} cap.click(); }
+    if (VSM_COARSE||sl.cap){ cap.setAttribute('capture',S.vsmp[sl.i].cam==='user'?'user':'environment'); ensureAudio(); try{ actx.resume(); }catch(e){} cap.click(); }
     else vsmRecStart(sl); };
   $('vsmStrip'+n).onclick=e=>{ if (!sl.dur) return; ensureAudio(); try{ actx.resume(); }catch(er){}
     const r=e.currentTarget.getBoundingClientRect(), t=(e.clientX-r.left)/r.width*sl.dur; let k=0; for (let j=0;j<sl.on.length;j++) if (sl.on[j]<=t) k=j;

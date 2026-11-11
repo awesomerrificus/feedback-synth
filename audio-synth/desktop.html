@@ -1047,7 +1047,7 @@ async function smpRecStart(){
     if (camStream){ try{ const both=await navigator.mediaDevices.getUserMedia({audio:AC, video:{width:{ideal:640},height:{ideal:480}}});
         camStream.getTracks().forEach(t=>t.stop()); camStream=new MediaStream(both.getVideoTracks()); vid.srcObject=camStream; vid.play().catch(()=>{});
         SREC.stream=new MediaStream(both.getAudioTracks()); e=null; }catch(e2){ e=e2; } }
-    if (e){ $(P+'Name').textContent=e&&e.name==='NotAllowedError'?'Mic access is blocked for this site: allow the microphone in the browser or phone settings, then reload.':'No microphone found: '+((e&&e.name)||'error'); return; } }
+    if (e){ $(P+'Rec').dataset.cap='1'; $(P+'Name').textContent=e&&e.name==='NotAllowedError'?'Mic access is blocked for this site: allow the microphone in the browser or phone settings, then reload.':'The mic would not record here ('+((e&&e.name)||'error')+'). Tap Record again to film a short clip with the camera app: its sound gets sliced.'; return; } }
   try{ await Promise.race([rs, new Promise(r=>setTimeout(r,800))]); }catch(e){}
   const ctx=A.ctx; SREC.src=ctx.createMediaStreamSource(SREC.stream); SREC.proc=ctx.createScriptProcessor(4096,2,2); SREC.sink=ctx.createGain(); SREC.sink.gain.value=0;
   SREC.L=[]; SREC.R=[]; SREC.len=0; SREC.pk=0; SREC.on=true; SREC.t0=performance.now();
@@ -1092,9 +1092,9 @@ function smpUseBuffer(buf,name){
   SMP.rev=rv; smpAnalyse(); smpSlice();
   if (!S.p[P+'.on']){ S.p[P+'.on']=true; syncUI(); save(); }
 }
-const COARSE=matchMedia('(pointer:coarse)').matches;
+const COARSE=matchMedia('(pointer:coarse)').matches||/iPhone|iPad|iPod|Android|CriOS|FxiOS/i.test(navigator.userAgent);
 $(P+'Cap').onchange=e=>{ smpLoad(e.target.files[0]); e.target.value=''; };
-$(P+'Rec').onclick=()=>{ if (SREC.on) return smpRecStop(); if (COARSE){ if (!A) A=buildAudio(); try{ A.ctx.resume(); }catch(e){} $(P+'Cap').click(); } else smpRecStart(); };
+$(P+'Rec').onclick=()=>{ if (SREC.on) return smpRecStop(); if (COARSE||$(P+'Rec').dataset.cap){ if (!A) A=buildAudio(); try{ A.ctx.resume(); }catch(e){} $(P+'Cap').click(); } else smpRecStart(); };
 $(P+'File').onchange=e=>{ smpLoad(e.target.files[0]); e.target.value=''; };
 $(P+'Wave').onclick=e=>{ if (!SMP.buf) return; const r=e.currentTarget.getBoundingClientRect(), tt=(e.clientX-r.left)/r.width*SMP.dur; let idx=0; for (let i=0;i<SMP.on.length;i++) if (SMP.on[i]<=tt) idx=i;
   if (!A) A=buildAudio(); A.ctx.resume(); if (!running) A.bus[P].gain.value=V[P+'.level']; smpPlay(idx,A.ctx.currentTime+.02,.9,0); };
