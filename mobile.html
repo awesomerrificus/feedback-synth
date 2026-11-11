@@ -411,7 +411,7 @@ label.small,.small{font-size:12px}
     </div>
 
     <div class="small" style="color:var(--dim);margin:10px 2px 4px">These start at 0. Raise <i>base</i> for a steady amount, or pick a sound and raise <i>amount</i> so it follows the music.</div>
-    <details class="sec mod2"><summary>Lens &amp; camera</summary><div class="modmaps" data-maps="fish shake dirt film bloom fringe dof"></div></details>
+    <details class="sec mod2"><summary>Lens &amp; camera</summary><div class="modmaps" data-maps="fish shake dirt film bloom fringe dof dots"></div></details>
     <details class="sec mod2"><summary>Analog video</summary><div class="modmaps" data-maps="vhs crt mosh"></div></details>
     <details class="sec mod2"><summary>Motion &amp; time</summary><div class="small" style="color:var(--dim)">Mirror tiles: higher = more tiles (1→4×4). Slit-scan: higher = longer time smear down the frame. Stutter: chance per beat of a freeze-frame burst; above 0.5 it strobes too.</div><div class="modmaps" data-maps="tile slit stutter neon"></div></details>
 
@@ -481,8 +481,8 @@ label.small,.small{font-size:12px}
       <p><b>Offline render</b> analyses the track frame by frame and steps every video clip to its exact frame, so the result is smooth at any resolution even if your computer can't play it live. The same seed always gives the same edit. In Chrome it asks where to save and writes straight to disk, so long 4K renders don't fill up memory.</p>
       <p><b>Live</b>: pick your audio interface under Input, then Live input. Use the tap clock if the room is too noisy for beat detection. Open the output window on the projector. MIDI learn: press it, click any dashed control, move a knob or hit a pad.</p>
       <p><b>Effect modules</b> run after the main look. <i>Video feedback</i> feeds each frame back into itself zoomed, rotated and shifted, for tunnels and spirals. <i>Video delay/echo</i> keeps the last 120 frames and layers up to 4 delayed copies (taps) on top, timed in ms or synced to the beat (tap tempo or detected BPM). <i>Echo feedback</i> sends the echoes back into the delay so they repeat and fade. Amount, mix and feedback can follow the music like any other effect, and every module setting is saved in scenes.</p>
-      <p><b>Lens, analog and motion effects</b> run last, on the finished picture: fisheye, handheld shake, dirty lens, film look, bloom, lens fringing, depth blur, VHS, CRT, datamosh smear (strongest just after a cut), mirror tiles, slit-scan, stutter/strobe and neon edges.</p>
-      <p><b>Generative sources</b> (section 2) are algorithms that draw live, driven by the music, and join your pool like any clip: Disorder grid (after Vera Molnár / Georg Nees), Random walk (after Frieder Nake), Oscillons (your track as an oscilloscope figure, after Ben Laposky), Harmonic dots (after John Whitney), Cube studies (after Manfred Mohr), Chance collage and Cut-up strips (built from your own images and clips, after Arp, Höch and Burroughs), Rotoreliefs (after Duchamp), Rule drawing (after Sol LeWitt), Squares &amp; stripes (after Albers, Stella and Agnes Martin) and Event score (your own words, after Fluxus). They're remembered between sessions.</p>
+      <p><b>Lens, analog and motion effects</b> run last, on the finished picture: dot lens (a drifting grid of little ball lenses; more = bigger, inverted discs), fisheye, handheld shake, dirty lens, film look, bloom, lens fringing, depth blur, VHS, CRT, datamosh smear (strongest just after a cut), mirror tiles, slit-scan, stutter/strobe and neon edges.</p>
+      <p><b>Generative sources</b> (section 2) are algorithms that draw live, driven by the music, and join your pool like any clip: Woven ribbons, Sliced weave and Mirrored chevrons (op-art weaves whose rows slide on the beat), Disorder grid (after Vera Molnár / Georg Nees), Random walk (after Frieder Nake), Oscillons (your track as an oscilloscope figure, after Ben Laposky), Harmonic dots (after John Whitney), Cube studies (after Manfred Mohr), Chance collage and Cut-up strips (built from your own images and clips, after Arp, Höch and Burroughs), Rotoreliefs (after Duchamp), Rule drawing (after Sol LeWitt), Squares &amp; stripes (after Albers, Stella and Agnes Martin) and Event score (your own words, after Fluxus). They're remembered between sessions.</p>
       <p><b>Scenes</b> store every setting in sections 3 and 4 (mappings, cuts, blend, crossfade, beat sensitivity). They're kept in this browser; use Export to save them to a file you can back up, share or Import on another computer. Each scene gets a button under Live performance that you can map to a MIDI pad.</p>
       <p>Everything runs on your computer; files never leave it.</p>
     </details>
@@ -2443,6 +2443,7 @@ const EFFECTS = [
   ['fish','Fisheye',1],['shake','Handheld shake',1],['dirt','Dirty lens',1],['film','Film look',1],['bloom','Bloom',1],['fringe','Lens fringing',1],['dof','Depth blur',1],
   ['vhs','VHS',1],['crt','CRT',1],['mosh','Datamosh smear',1],
   ['tile','Mirror tiles',1],['slit','Slit-scan',1],['stutter','Stutter / strobe',1],['neon','Neon edges',1],
+  ['dots','Dot lens',1],
 ];
 const DEF_BASE={sat:0.5, speed:0.5, vfb:0.85, echo:0.6, efb:0.45};
 function defBase(k){ return DEF_BASE[k] ?? 0; }
@@ -2450,7 +2451,7 @@ const DEF_FX={
   vfb:{on:false, mode:'0', zoom:1.02, rot:0.5, sx:0, sy:0, decay:0.92, hue:0.01},
   echo:{on:false, sync:'1', ms:300, taps:3, tapDecay:0.7, spread:0.2, blend:'0'}
 };
-const LOOK_KEYS=['fish','shake','dirt','film','bloom','fringe','dof','vhs','crt','mosh','tile','slit','stutter','neon'];
+const LOOK_KEYS=['fish','shake','dirt','film','bloom','fringe','dof','vhs','crt','mosh','tile','slit','stutter','neon','dots'];
 const CUTS = [
   ['1','Every beat'],['2','Every 2 beats'],['4','Every bar (4)'],['8','Every 2 bars'],['16','Every 4 bars'],
   ['onset','On onsets'],['manual','Manual only']
@@ -2470,6 +2471,8 @@ const PRESETS = {
   'Glitch noise': {cutMain:'onset',cutOvl:'2',blend:'4',fadeLen:0.0, m:{
     glitch:['onset',0.05,0.9], rgb:['flux',0.1,0.8], post:['high',0,0.6], invert:['beat',0,0.5], zoom:['beat',0,0.2],
     sat:['none',0.5,0], overlay:['high',0,0.8], fb:['none',0.15,0], speed:['flux',0.5,1]}},
+  'Lens grid': {cutMain:'4',cutOvl:'manual',blend:'0',fadeLen:0.4, m:{
+    dots:['level',0.45,0.5], zoom:['beat',0,0.06], hue:['lfoSlow',0,0.08], sat:['none',0.6,0], speed:['none',0.4,0]}},
   'Ambient drift': {cutMain:'16',cutOvl:'16',blend:'1',fadeLen:2.0, m:{
     fb:['level',0.7,0.2], disp:['lfoSlow',0.1,0.3], hue:['centroid',0,0.2], sat:['level',0.35,0.3],
     overlay:['mid',0.25,0.4], zoom:['lfoSlow',0,0.1], speed:['none',0.2,0]}},
@@ -2949,7 +2952,7 @@ precision highp float; precision highp sampler2DArray;
 in vec2 vUv; out vec4 o;
 uniform sampler2D tIn, tPrev, tDirt; uniform sampler2DArray tRing;
 uniform vec2 res; uniform float time; uniform vec4 shake; uniform int ringPos, ringN, ringCount;
-uniform float fish, dirt, film, bloom, fringe, dof, vhs, crt, mosh, tile, slit, neon;
+uniform float fish, dirt, film, bloom, fringe, dof, vhs, crt, mosh, tile, slit, neon, dots;
 float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float luma(vec3 c){ return dot(c,vec3(.299,.587,.114)); }
 vec2 rot2(vec2 p,float a){ float c=cos(a),s=sin(a); return mat2(c,-s,s,c)*p; }
@@ -2964,6 +2967,13 @@ void main(){
   if(tile>0.01){ float N=1.+floor(tile*3.999); if(N>1.){ vec2 g=uv*N, c=floor(g), f=fract(g);
     if(mod(c.x,2.)>.5) f.x=1.-f.x; if(mod(c.y,2.)>.5) f.y=1.-f.y; uv=f; } }                        // mirror tiles
   if(fish>0.){ vec2 p=(uv-.5)*vec2(sa,1.); float k=fish*1.3; p*=(1.+k*dot(p,p))/(1.+k*.3); uv=p/vec2(sa,1.)+.5; } // fisheye
+  float dotShade=1., dotRim=0.;
+  if(dots>0.003){ float cs=min(res.x,res.y)/(10.-2.*dots); vec2 P=uv*res+vec2(t*7.,t*3.5); vec2 g=P/cs, c=floor(g), f=fract(g)-.5; float r=length(f);
+    float inside=smoothstep(.52,.4,r), vis=min(1.,dots*2.5);
+    vec2 ctr=((c+.5)*cs-vec2(t*7.,t*3.5))/res; vec2 lens=ctr+f*cs/res*(1.-1.5*dots)*(1.+.25*r);   // each disc is a little ball lens
+    uv=mix(uv, mix(uv,lens,inside), vis);
+    dotShade=1.-vis*(.22*smoothstep(.3,.52,r)*inside+.18*(1.-inside));
+    dotRim=vis*inside*smoothstep(.3,.47,r)*smoothstep(.0,.6,dot(normalize(f+1e-4),vec2(-.7,-.7)))*.12; }     // dot lens
   float crtMask=1.;
   if(crt>0.){ vec2 q=uv*2.-1.; q*=1.+(q.yx*q.yx)*.12*crt; uv=q*.5+.5; vec2 e=smoothstep(0.,.006,uv)*smoothstep(0.,.006,1.-uv); crtMask=mix(1.,e.x*e.y,step(.01,crt)); }
   float band=0.;
@@ -2993,6 +3003,7 @@ void main(){
     col=col*(1.-d.a*dirt*.75*(1.-d.r))+d.a*d.r*dirt*(.12+avg*1.3); col*=1.-.3*dirt*dot(vUv-.5,vUv-.5)*2.; }
   if(crt>0.){ float lines=min(res.y/2.5,480.); col*=1.-crt*.35*(.5+.5*cos(vUv.y*lines*6.2831));
     float m=mod(gl_FragCoord.x,3.); vec3 mk=m<1.?vec3(1.,.72,.72):(m<2.?vec3(.72,1.,.72):vec3(.72,.72,1.)); col*=mix(vec3(1.),mk,crt*.7)*(1.+.3*crt)*crtMask; }
+  col=col*dotShade+dotRim;
   o=vec4(clamp(col,0.,1.),1.);
 }`;
 function compile(src,type){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s); if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
@@ -3618,7 +3629,72 @@ const GENS = {
       const tooWide=Math.max(...lines.map(l=>g.measureText(l).width)); if (tooWide>w*.86){ fs*=w*.86/tooWide; g.font=`700 ${fs}px "Courier New",Courier,monospace`; }
       lines.forEach((l,i)=>g.fillText(l, w/2+(c.rnd()-.5)*jit*fs*.1, h/2+(i-(lines.length-1)/2)*fs*1.15+(c.rnd()-.5)*jit*fs*.1));
     }}; }},
+  'Woven ribbons': { credit:'op-art weave', make(){ return ribbonGen('soft'); }},
+  'Sliced weave': { credit:'op-art weave, glitched', make(){ return ribbonGen('slice'); }},
+  'Mirrored chevrons': { credit:'op-art weave, mirrored', make(){ return chevronGen(); }},
 };
+/* ---- op-art ribbons: shared helpers ---- */
+function palMix(P,v){ v=((v%1)+1)%1*P.length; const i=Math.floor(v), f=v-i, a=P[i], b=P[(i+1)%P.length], e=f*f*(3-2*f);
+  return `rgb(${Math.round(a[0]+(b[0]-a[0])*e)},${Math.round(a[1]+(b[1]-a[1])*e)},${Math.round(a[2]+(b[2]-a[2])*e)})`; }
+function rrect(g,x,y,w,h,r){ r=Math.min(r,w/2,h/2); g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function ribbonGen(mode){
+  const SOFT=[[232,40,30],[244,214,160],[40,92,110],[94,58,62],[214,52,40],[226,200,150],[52,110,120]];
+  const FLAT=[[255,94,20],[18,16,16],[248,236,206],[48,118,200]];
+  let shift=[], target=[], phase=0, palPh=0, off=null, offg=null, sl=[], slT=[];
+  return { draw(g,w,h,c){
+    const D=Math.hypot(w,h), n=13, s=D/n, A=c.A;
+    if (shift.length!==n*2){ shift=Array(n*2).fill(0); target=Array(n*2).fill(0); }
+    if (c.beat){ const k=Math.floor(c.rnd()*n*2); target[k]+=(c.rnd()<.5?-1:1)*(c.rnd()<.3?2:1); }
+    for (let k=0;k<n*2;k++) shift[k]+=(target[k]-shift[k])*Math.min(1,c.dt*6);
+    phase+=c.dt*(.15+A.level*.6)*(.5+c.speed); palPh+=c.dt*(.02+A.centroid*.06);
+    const tg=mode==='slice'?(off||(off=document.createElement('canvas'))):null;
+    if (tg && (tg.width!==w||tg.height!==h)){ tg.width=w; tg.height=h; offg=tg.getContext('2d'); }
+    const q=tg?offg:g, P=mode==='slice'?FLAT:SOFT, bw=s*(1.02+A.bass*.12), rad=s*.3;
+    q.save(); q.fillStyle=mode==='slice'?'rgb(255,94,20)':'rgb(48,110,200)'; q.fillRect(0,0,w,h);
+    q.translate(w/2,h/2); q.rotate(-Math.PI/4);
+    const field=(x,y)=>palPh+Math.hypot(x,y)/D*1.6+Math.sin(x/D*3+phase*.7)*.12;
+    const col=(x,y)=> mode==='slice' ? 'rgb('+P[Math.floor(((field(x,y)*2.2)%1+1)%1*P.length)].join(',')+')' : palMix(P,field(x,y));
+    // long ribbons along one diagonal, shingled: each row overlaps the one above and casts a soft shadow
+    const rows=2*Math.ceil(n*.6), L=s*3.2, rowH=s*.92;
+    if (mode!=='slice'){ q.shadowColor='rgba(0,0,0,.38)'; q.shadowBlur=s*.28; q.shadowOffsetY=-s*.05; }
+    for (let j=-rows/2;j<rows/2;j++){ const lane=((j+rows)%(n*2)+n*2)%(n*2), sh=(shift[lane]*.5+Math.sin(phase+j*.45)*.18)*s, y0=j*rowH-bw/2;
+      const start=-D/2-L*2+((j*s*.55+sh)%L+L)%L;
+      for (let x0=start;x0<D/2+L;x0+=L){ const ww=L-s*.08;
+        let fill; if (mode==='slice') fill=col(x0+ww/2,y0+bw/2); else { fill=q.createLinearGradient(x0,0,x0+ww,0); fill.addColorStop(0,col(x0,y0+bw/2)); fill.addColorStop(.55,col(x0+ww*.55,y0+bw/2)); fill.addColorStop(1,col(x0+ww,y0+bw/2)); }
+        q.fillStyle=fill; rrect(q,x0,y0,ww,bw,rad); q.fill(); } }
+    q.shadowColor='transparent'; q.shadowBlur=0; q.shadowOffsetY=0;
+    q.restore();
+    if (!tg) return;
+    // slice the picture into strips that slip sideways on onsets
+    const N=18; if (sl.length!==N){ sl=Array(N).fill(0); slT=Array(N).fill(0); }
+    if (c.onset||c.beat){ const amt=(.03+A.high*.12+A.level*.08)*w; for (let k=0;k<N;k++) if (c.rnd()<.45) slT[k]=(c.rnd()-.5)*2*amt; }
+    for (let k=0;k<N;k++){ slT[k]*=Math.pow(.25,c.dt); sl[k]+=(slT[k]-sl[k])*Math.min(1,c.dt*10); }
+    g.fillStyle='rgb(255,94,20)'; g.fillRect(0,0,w,h); const hs=h/N;
+    for (let k=0;k<N;k++){ const y=Math.floor(k*hs), hh=Math.ceil(hs)+1, dx=sl[k];
+      g.drawImage(tg,0,y,w,hh,dx,y,w,hh); if (Math.abs(dx)>w*.015){ g.drawImage(tg,0,y,w,hh,dx-(dx>0?w:-w),y,w,hh);
+        g.fillStyle='rgba(255,60,120,.5)'; g.fillRect(0,y,w,Math.max(1,h/700)); g.fillStyle='rgba(60,160,255,.45)'; g.fillRect(0,y+Math.max(1,h/700),w,Math.max(1,h/700)); } }
+  }}; }
+function chevronGen(){
+  const P=[[40,160,170],[200,190,150],[200,130,30],[120,120,40],[220,40,30],[230,60,120],[40,90,170],[30,120,140]];
+  let ph=0, palPh=0;
+  return { draw(g,w,h,c){
+    const A=c.A, half=w/2, s=Math.hypot(half,h)/10, bw=s*(.97+A.bass*.08);
+    ph+=c.dt*(.12+A.level*.5)*(.5+c.speed); palPh+=c.dt*(.03+A.centroid*.05);
+    g.fillStyle='rgb(236,214,186)'; g.fillRect(0,0,w,h);
+    for (let side=0;side<2;side++){ g.save(); g.beginPath(); g.rect(side?half:0,0,half,h); g.clip();
+      if (side){ g.translate(w,0); g.scale(-1,1); }
+      g.translate(half,0); g.rotate(Math.PI/4);                    // bands run down-left from the centre line
+      const breathe=Math.sin(ph*2)*s*.25*(1+A.mid);
+      for (let j=-14;j<16;j++){ const y=j*s+((ph*s*.6)%s);
+        for (let i=-1;i<8;i++){ const x=i*s*2.6+((j&1)?s*1.3:0)-s*3+breathe*(j%3);
+          const cx=x+s, cy=y; const depth=(Math.cos(Math.PI/4)*(cx)+Math.sin(Math.PI/4)*cy)/h; // ~vertical position on screen
+          const gr=g.createLinearGradient(x,0,x+s*2.55,0); gr.addColorStop(0,palMix(P,palPh+depth*.9)); gr.addColorStop(.5,palMix(P,palPh+depth*.9+.06)); gr.addColorStop(1,palMix(P,palPh+depth*.9+.12));
+          g.fillStyle=gr; rrect(g,x,y-bw/2,s*2.55,bw,s*.14); g.fill(); } }
+      g.restore(); }
+    // dark soft knot where the two sides meet
+    const ky=h*(.45+.08*Math.sin(ph)), rg=g.createRadialGradient(half,ky,0,half,ky,w*.22*(1+A.bass*.4));
+    rg.addColorStop(0,'rgba(8,16,10,.75)'); rg.addColorStop(1,'rgba(8,16,10,0)'); g.fillStyle=rg; g.fillRect(0,0,w,h);
+  }}; }
 const DEFAULT_WORDS=['listen','wait for the drop','count the beats until silence','turn toward the loudest sound','draw one line','repeat','stand still for one bar','erase everything','now','this is a score'].join('\n');
 function addGen(name){
   const G=GENS[name]; if (!G) return;
