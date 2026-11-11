@@ -412,6 +412,7 @@ label.small,.small{font-size:12px}
 
     <div class="small" style="color:var(--dim);margin:10px 2px 4px">These start at 0. Raise <i>base</i> for a steady amount, or pick a sound and raise <i>amount</i> so it follows the music.</div>
     <details class="sec mod2"><summary>Lens &amp; camera</summary><div class="modmaps" data-maps="fish shake dirt film bloom fringe dof dots"></div></details>
+    <details class="sec mod2"><summary>Pixel drift</summary><div class="row"><label class="small">Shape <select data-fx="pix.shape"><option value="0">Dots</option><option value="1">Squares</option><option value="2">LED grid</option><option value="3">Halftone (size by brightness)</option></select></label></div><div class="small" style="color:var(--dim)">Turns any picture into a grid of dots or squares. Size sets the grid, Drift lets each cell wander, Scatter spreads them apart. Try drift on level and scatter on bass.</div><div class="modmaps" data-maps="pix pdrift pspread"></div></details>
     <details class="sec mod2"><summary>Analog video</summary><div class="modmaps" data-maps="vhs crt mosh"></div></details>
     <details class="sec mod2"><summary>Motion &amp; time</summary><div class="small" style="color:var(--dim)">Mirror tiles: higher = more tiles (1→4×4). Slit-scan: higher = longer time smear down the frame. Stutter: chance per beat of a freeze-frame burst; above 0.5 it strobes too.</div><div class="modmaps" data-maps="tile slit stutter neon"></div></details>
 
@@ -481,7 +482,7 @@ label.small,.small{font-size:12px}
       <p><b>Offline render</b> analyses the track frame by frame and steps every video clip to its exact frame, so the result is smooth at any resolution even if your computer can't play it live. The same seed always gives the same edit. In Chrome it asks where to save and writes straight to disk, so long 4K renders don't fill up memory.</p>
       <p><b>Live</b>: pick your audio interface under Input, then Live input. Use the tap clock if the room is too noisy for beat detection. Open the output window on the projector. MIDI learn: press it, click any dashed control, move a knob or hit a pad.</p>
       <p><b>Effect modules</b> run after the main look. <i>Video feedback</i> feeds each frame back into itself zoomed, rotated and shifted, for tunnels and spirals. <i>Video delay/echo</i> keeps the last 120 frames and layers up to 4 delayed copies (taps) on top, timed in ms or synced to the beat (tap tempo or detected BPM). <i>Echo feedback</i> sends the echoes back into the delay so they repeat and fade. Amount, mix and feedback can follow the music like any other effect, and every module setting is saved in scenes.</p>
-      <p><b>Lens, analog and motion effects</b> run last, on the finished picture: dot lens (a drifting grid of little ball lenses; more = bigger, inverted discs), fisheye, handheld shake, dirty lens, film look, bloom, lens fringing, depth blur, VHS, CRT, datamosh smear (strongest just after a cut), mirror tiles, slit-scan, stutter/strobe and neon edges.</p>
+      <p><b>Lens, analog and motion effects</b> run last, on the finished picture: pixel drift (the picture as dots, squares, an LED grid or halftone; each cell keeps its colour while it wanders and scatters with the sound; shape is set in its panel), dot lens (a drifting grid of little ball lenses; more = bigger, inverted discs), fisheye, handheld shake, dirty lens, film look, bloom, lens fringing, depth blur, VHS, CRT, datamosh smear (strongest just after a cut), mirror tiles, slit-scan, stutter/strobe and neon edges.</p>
       <p><b>Generative sources</b> (section 2) are algorithms that draw live, driven by the music, and join your pool like any clip: Woven ribbons, Sliced weave and Mirrored chevrons (op-art weaves whose rows slide on the beat), Disorder grid (after Vera Molnár / Georg Nees), Random walk (after Frieder Nake), Oscillons (your track as an oscilloscope figure, after Ben Laposky), Harmonic dots (after John Whitney), Cube studies (after Manfred Mohr), Chance collage and Cut-up strips (built from your own images and clips, after Arp, Höch and Burroughs), Rotoreliefs (after Duchamp), Rule drawing (after Sol LeWitt), Squares &amp; stripes (after Albers, Stella and Agnes Martin) and Event score (your own words, after Fluxus). They're remembered between sessions.</p>
       <p><b>Scenes</b> store every setting in sections 3 and 4 (mappings, cuts, blend, crossfade, beat sensitivity). They're kept in this browser; use Export to save them to a file you can back up, share or Import on another computer. Each scene gets a button under Live performance that you can map to a MIDI pad.</p>
       <p>Everything runs on your computer; files never leave it.</p>
@@ -2444,14 +2445,16 @@ const EFFECTS = [
   ['vhs','VHS',1],['crt','CRT',1],['mosh','Datamosh smear',1],
   ['tile','Mirror tiles',1],['slit','Slit-scan',1],['stutter','Stutter / strobe',1],['neon','Neon edges',1],
   ['dots','Dot lens',1],
+  ['pix','Pixel size',1],['pdrift','Pixel drift',1],['pspread','Pixel scatter',1],
 ];
 const DEF_BASE={sat:0.5, speed:0.5, vfb:0.85, echo:0.6, efb:0.45};
 function defBase(k){ return DEF_BASE[k] ?? 0; }
 const DEF_FX={
   vfb:{on:false, mode:'0', zoom:1.02, rot:0.5, sx:0, sy:0, decay:0.92, hue:0.01},
-  echo:{on:false, sync:'1', ms:300, taps:3, tapDecay:0.7, spread:0.2, blend:'0'}
+  echo:{on:false, sync:'1', ms:300, taps:3, tapDecay:0.7, spread:0.2, blend:'0'},
+  pix:{shape:'0'}
 };
-const LOOK_KEYS=['fish','shake','dirt','film','bloom','fringe','dof','vhs','crt','mosh','tile','slit','stutter','neon','dots'];
+const LOOK_KEYS=['fish','shake','dirt','film','bloom','fringe','dof','vhs','crt','mosh','tile','slit','stutter','neon','dots','pix','pdrift','pspread'];
 const CUTS = [
   ['1','Every beat'],['2','Every 2 beats'],['4','Every bar (4)'],['8','Every 2 bars'],['16','Every 4 bars'],
   ['onset','On onsets'],['manual','Manual only']
@@ -2473,6 +2476,8 @@ const PRESETS = {
     sat:['none',0.5,0], overlay:['high',0,0.8], fb:['none',0.15,0], speed:['flux',0.5,1]}},
   'Lens grid': {cutMain:'4',cutOvl:'manual',blend:'0',fadeLen:0.4, m:{
     dots:['level',0.45,0.5], zoom:['beat',0,0.06], hue:['lfoSlow',0,0.08], sat:['none',0.6,0], speed:['none',0.4,0]}},
+  'Pixel drift': {cutMain:'8',cutOvl:'manual',blend:'0',fadeLen:0.5, m:{
+    pix:['none',0.32,0], pdrift:['level',0.15,0.7], pspread:['bass',0,0.55], zoom:['beat',0,0.04], sat:['none',0.6,0], speed:['none',0.5,0]}},
   'Ambient drift': {cutMain:'16',cutOvl:'16',blend:'1',fadeLen:2.0, m:{
     fb:['level',0.7,0.2], disp:['lfoSlow',0.1,0.3], hue:['centroid',0,0.2], sat:['level',0.35,0.3],
     overlay:['mid',0.25,0.4], zoom:['lfoSlow',0,0.1], speed:['none',0.2,0]}},
@@ -2952,13 +2957,31 @@ precision highp float; precision highp sampler2DArray;
 in vec2 vUv; out vec4 o;
 uniform sampler2D tIn, tPrev, tDirt; uniform sampler2DArray tRing;
 uniform vec2 res; uniform float time; uniform vec4 shake; uniform int ringPos, ringN, ringCount;
-uniform float fish, dirt, film, bloom, fringe, dof, vhs, crt, mosh, tile, slit, neon, dots;
+uniform float fish, dirt, film, bloom, fringe, dof, vhs, crt, mosh, tile, slit, neon, dots, pix, pdrift, pspread; uniform int pixShape;
 float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float luma(vec3 c){ return dot(c,vec3(.299,.587,.114)); }
 vec2 rot2(vec2 p,float a){ float c=cos(a),s=sin(a); return mat2(c,-s,s,c)*p; }
 vec3 src(vec2 uv){
   if(slit>0.005){ float d=min(floor((1.-clamp(uv.y,0.,1.))*slit*float(ringN-1)),float(max(ringCount-1,0))); float l=mod(float(ringPos-1)-d+float(ringN)*4.,float(ringN)); return texture(tRing,vec3(uv,l)).rgb; }
   return texture(tIn,uv).rgb;
+}
+// pixel drift: the picture becomes a grid of dots/squares; each cell keeps its colour and wanders / scatters with the sound
+vec3 pixelate(vec2 uv, float t){
+  float sa=res.x/res.y, cs=mix(.011,.07,pix*pix), sp=1.+pspread*1.6;
+  vec2 P=(uv-.5)*vec2(sa,1.), Q=P/sp, b=floor(Q/cs);
+  float aa=1.6/res.y/sp, r0=cs*.46/sp, best=0.; vec3 hit=vec3(0.);
+  for(int j=-2;j<=2;j++) for(int i=-2;i<=2;i++){ vec2 c=b+vec2(float(i),float(j));
+    float hs=h(c), hs2=h(c+17.3);
+    vec2 d=(vec2(sin(t*(.6+hs*.8)+hs*6.2831), cos(t*(.5+hs2*.8)+hs2*6.2831))*.85
+          +vec2(sin(t*.9+c.y*.23+c.x*.05),cos(t*.7+c.x*.19-c.y*.04))*1.05)*pdrift*cs;     // own wander + a shared flowing current (max ~1.9 cells)
+    vec2 home=(c+.5)*cs, ctr=home+d;
+    vec2 su=clamp(home*sp/vec2(sa,1.)+.5,0.,1.); vec3 cc=src(su);
+    float r=r0; if(pixShape==3) r*=clamp(sqrt(luma(cc))*1.15,.08,1.);                    // halftone: size from brightness
+    vec2 q=Q-ctr; float dist=pixShape==1?max(abs(q.x),abs(q.y)):length(q);
+    float cov=smoothstep(r+aa,r-aa,dist); if(cov>best*.999){ best=max(best,cov); hit=mix(hit,cc,cov); } }
+  vec3 bg=vec3(0.);
+  if(pixShape==2){ vec2 g=fract(P/(cs))-.5; bg=vec3(.16)*smoothstep(.36,.3,length(g)); }               // LED: unlit grid behind
+  return mix(bg,hit,best);
 }
 void main(){
   float sa=res.x/res.y, t=time, fr=floor(t*24.); vec2 uv=vUv;
@@ -2994,6 +3017,7 @@ void main(){
   if(neon>0.){ vec2 px=1.5/res; float tl=luma(src(uv+vec2(-px.x,px.y))),tr=luma(src(uv+px)),bl=luma(src(uv-px)),br=luma(src(uv+vec2(px.x,-px.y)));
     float e=smoothstep(.04,.25,length(vec2((tr+br)-(tl+bl),(tl+tr)-(bl+br))));
     vec3 hc=.5+.5*cos(6.2831*(vec3(0.,.33,.67)+luma(col)+t*.05)); col=mix(col,hc*e*1.6,neon); }
+  if(pix>0.003){ vec3 pc=pixelate(uv,t); col=mix(col,pc,min(1.,pix*12.)); }
   if(film>0.){ col+=(h(vUv*res*.5+fract(t)*91.)-.5)*.14*film; col*=1.+(h(vec2(fr,7.))-.5)*.14*film;
     vec2 lc=vec2(.5+.45*sin(t*.17),.5+.4*cos(t*.13)); float lk=smoothstep(.75,0.,length((vUv-lc)*vec2(sa,1.)));
     col+=vec3(1.,.42,.12)*lk*.35*film*(.6+.4*sin(t*.7));
@@ -3009,7 +3033,7 @@ void main(){
 function compile(src,type){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s); if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
 function program(fs){ const p=gl.createProgram(); gl.attachShader(p,compile(VS,gl.VERTEX_SHADER)); gl.attachShader(p,compile(fs,gl.FRAGMENT_SHADER)); gl.bindAttribLocation(p,0,'p'); gl.linkProgram(p); if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); return p; }
 const prog=program(FS), blit=program(BLIT), vfbProg=program(VFB_FS), echoProg=program(ECHO_FS), lookProg=program(LOOK_FS);
-const UL={}; for (const n of ['tIn','tPrev','tDirt','tRing','res','time','shake','ringPos','ringN','ringCount',...LOOK_KEYS.filter(k=>k!=='shake'&&k!=='stutter')]) UL[n]=gl.getUniformLocation(lookProg,n);
+const UL={}; for (const n of ['tIn','tPrev','tDirt','tRing','res','time','shake','ringPos','ringN','ringCount',...LOOK_KEYS.filter(k=>k!=='shake'&&k!=='stutter')]) UL[n]=gl.getUniformLocation(lookProg,n); UL.pixShape=gl.getUniformLocation(lookProg,'pixShape');
 const UV={}; for (const n of ['tIn','tPrev','res','amt','zoom','rot','decay','hue','sx','sy','mode']) UV[n]=gl.getUniformLocation(vfbProg,n);
 const UE={}; for (const n of ['tIn','tRing','layers','gains','k','spread','mode','writePass']) UE[n]=gl.getUniformLocation(echoProg,n);
 const U={}; for (const n of ['tA','tP','tB','tF','res','asp','time','fade','ovl','zoom','disp','rgb','kal','rot','hue','sat','fb','glitch','flash','post','inv','seed','beat','blendMode']) U[n]=gl.getUniformLocation(prog,n);
@@ -3187,6 +3211,7 @@ function draw(now){
     gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D_ARRAY,ring); gl.uniform1i(UL.tRing,3);
     gl.uniform2f(UL.res,canvas.width,canvas.height); gl.uniform1f(UL.time,now/1000); gl.uniform1i(UL.ringPos,ringPos); gl.uniform1i(UL.ringN,RING); gl.uniform1i(UL.ringCount,ringCount);
     for (const k of LOOK_KEYS) if (k!=='shake' && k!=='stutter') gl.uniform1f(UL[k], Math.min(1,val[k]));
+    gl.uniform1i(UL.pixShape, +(S.fx.pix&&S.fx.pix.shape)||0);
     gl.uniform1f(UL.mosh, lookFresh ? 0 : Math.min(1,val.mosh)*(0.25+0.75*Math.exp(-(now-lastCutAt)/500))); lookFresh=false;
     const sk=Math.min(1,val.shake);
     if (sk>0.003){ const t=now/1000, ang=A.rand*6.2832, j=A.beat*A.beat;
