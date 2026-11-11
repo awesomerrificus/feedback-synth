@@ -163,19 +163,21 @@ label.small,.small{font-size:12px}
       <div id="pool"></div>
     </div>
 
-    <h2>Video sampler</h2>
+    <h2>Sampler (video + sound)</h2>
     <div class="sec" id="vsmSec">
-      <div class="small" style="color:var(--dim)">Load a clip or record from the camera: it gets cut into slices at its picture changes, and the music plays the slices. Each sampler joins the source pool.</div>
+      <div class="small" style="color:var(--dim)">Load a video or a sound file, or record: it gets cut into slices at its sound hits, and the music plays the slices, picture, sound or both. A sampler with pictures joins the source pool.</div>
       <div class="vsm" data-vslot="1">
-        <div class="row"><b class="small" style="color:var(--text)">Video sampler 1</b></div>
-        <div class="row"><label class="btn">Load video<input id="vsmFile1" type="file" accept="video/*,.mp4,.mov,.m4v,.webm"></label><button class="recbtn" id="vsmRec1" title="Record from the camera, then it gets cut into slices">● Record camera</button><button id="vsmClear1" title="Unload this clip">Unload</button><label class="small"><input data-v="mute" type="checkbox"> Mute</label><select data-v="cam" title="Which camera to record from"><option value="user">Front / webcam</option><option value="environment">Back camera</option></select></div>
-        <div id="vsmName1" class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No clip yet: load a video or record from the camera</div>
-        <canvas id="vsmStrip1" width="600" height="96" title="Tap a slice to show it" style="width:100%;height:68px;display:block;background:#0f1115;border:1px solid #363b47;border-radius:5px;cursor:pointer"></canvas>
+        <div class="row"><b class="small" style="color:var(--text)">Sampler 1</b></div>
+        <div class="row"><label class="btn">Load video or sound<input id="vsmFile1" type="file" accept="video/*,audio/*,.mp4,.mov,.m4v,.webm,.mp3,.m4a,.aac,.wav,.aif,.aiff,.caf,.flac,.ogg,.opus"></label><input id="vsmCap1" type="file" accept="video/*" capture="environment" style="display:none"><button class="recbtn" id="vsmRec1" title="Record picture and sound, then it gets cut into slices (on a phone this opens the camera app)">● Record</button><button id="vsmClear1" title="Unload">Unload</button><label class="small"><input data-v="mute" type="checkbox"> Mute</label></div>
+        <div class="row"><label class="small">Camera <select data-v="cam" title="Which camera to record from"><option value="user">Front / webcam</option><option value="environment">Back camera</option></select></label><label class="small">Plays <select data-v="out" title="What each slice plays"><option value="both">Video + sound</option><option value="video">Video only</option><option value="audio">Sound only</option></select></label></div>
+        <div id="vsmName1" class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Nothing loaded</div>
+        <canvas id="vsmStrip1" width="600" height="96" title="Tap a slice to play it" style="width:100%;height:68px;display:block;background:#0f1115;border:1px solid #363b47;border-radius:5px;cursor:pointer"></canvas>
         <div class="vsmgrid">
-          <label>Level (fades to black)<input data-v="bright" type="range" min="0" max="1" step="0.01"></label>
+          <label>Volume<input data-v="vol" type="range" min="0" max="1.5" step="0.01"></label>
+          <label>Picture level (fades to black)<input data-v="bright" type="range" min="0" max="1" step="0.01"></label>
           <label>Slice sensitivity<input data-v="sens" type="range" min="0" max="1" step="0.01"></label>
           <label>Max slices<select data-v="max"><option value="8">8</option><option value="16">16</option><option value="32">32</option></select></label>
-          <label>Cut at<select data-v="cuts"><option value="change">Picture changes</option><option value="even">Even pieces</option></select></label>
+          <label>Cut at<select data-v="cuts"><option value="hits">Sound hits</option><option value="change">Picture changes</option><option value="even">Even pieces</option></select></label>
           <label>Played by<select data-v="mode"><option value="beat">Beats, random slice</option><option value="seq">Beats, in order</option><option value="hits">Every hit</option><option value="bass">Bass picks the slice</option><option value="scrub">Loudness scrubs through</option></select></label>
           <label>Speed (left = backwards)<input data-v="speed" type="range" min="-2" max="2" step="0.05"></label>
           <label>Loudness speeds it up<input data-v="push" type="range" min="0" max="1" step="0.01"></label>
@@ -186,15 +188,17 @@ label.small,.small{font-size:12px}
         </div>
       </div>
       <div class="vsm" data-vslot="2">
-        <div class="row"><b class="small" style="color:var(--text)">Video sampler 2</b><button class="vsmDel" data-n="2" title="Remove this video sampler">Remove</button></div>
-        <div class="row"><label class="btn">Load video<input id="vsmFile2" type="file" accept="video/*,.mp4,.mov,.m4v,.webm"></label><button class="recbtn" id="vsmRec2" title="Record from the camera, then it gets cut into slices">● Record camera</button><button id="vsmClear2" title="Unload this clip">Unload</button><label class="small"><input data-v="mute" type="checkbox"> Mute</label><select data-v="cam" title="Which camera to record from"><option value="user">Front / webcam</option><option value="environment">Back camera</option></select></div>
-        <div id="vsmName2" class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No clip yet: load a video or record from the camera</div>
-        <canvas id="vsmStrip2" width="600" height="96" title="Tap a slice to show it" style="width:100%;height:68px;display:block;background:#0f1115;border:1px solid #363b47;border-radius:5px;cursor:pointer"></canvas>
+        <div class="row"><b class="small" style="color:var(--text)">Sampler 2</b><button class="vsmDel" data-n="2" title="Remove this sampler">Remove</button></div>
+        <div class="row"><label class="btn">Load video or sound<input id="vsmFile2" type="file" accept="video/*,audio/*,.mp4,.mov,.m4v,.webm,.mp3,.m4a,.aac,.wav,.aif,.aiff,.caf,.flac,.ogg,.opus"></label><input id="vsmCap2" type="file" accept="video/*" capture="environment" style="display:none"><button class="recbtn" id="vsmRec2" title="Record picture and sound, then it gets cut into slices (on a phone this opens the camera app)">● Record</button><button id="vsmClear2" title="Unload">Unload</button><label class="small"><input data-v="mute" type="checkbox"> Mute</label></div>
+        <div class="row"><label class="small">Camera <select data-v="cam" title="Which camera to record from"><option value="user">Front / webcam</option><option value="environment">Back camera</option></select></label><label class="small">Plays <select data-v="out" title="What each slice plays"><option value="both">Video + sound</option><option value="video">Video only</option><option value="audio">Sound only</option></select></label></div>
+        <div id="vsmName2" class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Nothing loaded</div>
+        <canvas id="vsmStrip2" width="600" height="96" title="Tap a slice to play it" style="width:100%;height:68px;display:block;background:#0f1115;border:1px solid #363b47;border-radius:5px;cursor:pointer"></canvas>
         <div class="vsmgrid">
-          <label>Level (fades to black)<input data-v="bright" type="range" min="0" max="1" step="0.01"></label>
+          <label>Volume<input data-v="vol" type="range" min="0" max="1.5" step="0.01"></label>
+          <label>Picture level (fades to black)<input data-v="bright" type="range" min="0" max="1" step="0.01"></label>
           <label>Slice sensitivity<input data-v="sens" type="range" min="0" max="1" step="0.01"></label>
           <label>Max slices<select data-v="max"><option value="8">8</option><option value="16">16</option><option value="32">32</option></select></label>
-          <label>Cut at<select data-v="cuts"><option value="change">Picture changes</option><option value="even">Even pieces</option></select></label>
+          <label>Cut at<select data-v="cuts"><option value="hits">Sound hits</option><option value="change">Picture changes</option><option value="even">Even pieces</option></select></label>
           <label>Played by<select data-v="mode"><option value="beat">Beats, random slice</option><option value="seq">Beats, in order</option><option value="hits">Every hit</option><option value="bass">Bass picks the slice</option><option value="scrub">Loudness scrubs through</option></select></label>
           <label>Speed (left = backwards)<input data-v="speed" type="range" min="-2" max="2" step="0.05"></label>
           <label>Loudness speeds it up<input data-v="push" type="range" min="0" max="1" step="0.01"></label>
@@ -205,15 +209,17 @@ label.small,.small{font-size:12px}
         </div>
       </div>
       <div class="vsm" data-vslot="3">
-        <div class="row"><b class="small" style="color:var(--text)">Video sampler 3</b><button class="vsmDel" data-n="3" title="Remove this video sampler">Remove</button></div>
-        <div class="row"><label class="btn">Load video<input id="vsmFile3" type="file" accept="video/*,.mp4,.mov,.m4v,.webm"></label><button class="recbtn" id="vsmRec3" title="Record from the camera, then it gets cut into slices">● Record camera</button><button id="vsmClear3" title="Unload this clip">Unload</button><label class="small"><input data-v="mute" type="checkbox"> Mute</label><select data-v="cam" title="Which camera to record from"><option value="user">Front / webcam</option><option value="environment">Back camera</option></select></div>
-        <div id="vsmName3" class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No clip yet: load a video or record from the camera</div>
-        <canvas id="vsmStrip3" width="600" height="96" title="Tap a slice to show it" style="width:100%;height:68px;display:block;background:#0f1115;border:1px solid #363b47;border-radius:5px;cursor:pointer"></canvas>
+        <div class="row"><b class="small" style="color:var(--text)">Sampler 3</b><button class="vsmDel" data-n="3" title="Remove this sampler">Remove</button></div>
+        <div class="row"><label class="btn">Load video or sound<input id="vsmFile3" type="file" accept="video/*,audio/*,.mp4,.mov,.m4v,.webm,.mp3,.m4a,.aac,.wav,.aif,.aiff,.caf,.flac,.ogg,.opus"></label><input id="vsmCap3" type="file" accept="video/*" capture="environment" style="display:none"><button class="recbtn" id="vsmRec3" title="Record picture and sound, then it gets cut into slices (on a phone this opens the camera app)">● Record</button><button id="vsmClear3" title="Unload">Unload</button><label class="small"><input data-v="mute" type="checkbox"> Mute</label></div>
+        <div class="row"><label class="small">Camera <select data-v="cam" title="Which camera to record from"><option value="user">Front / webcam</option><option value="environment">Back camera</option></select></label><label class="small">Plays <select data-v="out" title="What each slice plays"><option value="both">Video + sound</option><option value="video">Video only</option><option value="audio">Sound only</option></select></label></div>
+        <div id="vsmName3" class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Nothing loaded</div>
+        <canvas id="vsmStrip3" width="600" height="96" title="Tap a slice to play it" style="width:100%;height:68px;display:block;background:#0f1115;border:1px solid #363b47;border-radius:5px;cursor:pointer"></canvas>
         <div class="vsmgrid">
-          <label>Level (fades to black)<input data-v="bright" type="range" min="0" max="1" step="0.01"></label>
+          <label>Volume<input data-v="vol" type="range" min="0" max="1.5" step="0.01"></label>
+          <label>Picture level (fades to black)<input data-v="bright" type="range" min="0" max="1" step="0.01"></label>
           <label>Slice sensitivity<input data-v="sens" type="range" min="0" max="1" step="0.01"></label>
           <label>Max slices<select data-v="max"><option value="8">8</option><option value="16">16</option><option value="32">32</option></select></label>
-          <label>Cut at<select data-v="cuts"><option value="change">Picture changes</option><option value="even">Even pieces</option></select></label>
+          <label>Cut at<select data-v="cuts"><option value="hits">Sound hits</option><option value="change">Picture changes</option><option value="even">Even pieces</option></select></label>
           <label>Played by<select data-v="mode"><option value="beat">Beats, random slice</option><option value="seq">Beats, in order</option><option value="hits">Every hit</option><option value="bass">Bass picks the slice</option><option value="scrub">Loudness scrubs through</option></select></label>
           <label>Speed (left = backwards)<input data-v="speed" type="range" min="-2" max="2" step="0.05"></label>
           <label>Loudness speeds it up<input data-v="push" type="range" min="0" max="1" step="0.01"></label>
@@ -223,7 +229,7 @@ label.small,.small{font-size:12px}
           <label class="chk"><input data-v="pp" type="checkbox"> Ping-pong loop</label>
         </div>
       </div>
-      <div class="row"><button id="vsmAdd">＋ Add video sampler</button><span class="small">up to 3, each with its own clip</span></div>
+      <div class="row"><button id="vsmAdd">＋ Add sampler</button><span class="small">up to 3, each with its own clip or sound</span></div>
     </div>
 
     <h2>3 · Editing</h2>
@@ -350,7 +356,7 @@ label.small,.small{font-size:12px}
       <p><b>Live</b>: pick your audio interface under Input, then Live input. Use the tap clock if the room is too noisy for beat detection. Open the output window on the projector. MIDI learn: press it, click any dashed control, move a knob or hit a pad.</p>
       <p><b>Effect modules</b> run after the main look. <i>Video feedback</i> feeds each frame back into itself zoomed, rotated and shifted, for tunnels and spirals. <i>Video delay/echo</i> keeps the last 120 frames and layers up to 4 delayed copies (taps) on top, timed in ms or synced to the beat (tap tempo or detected BPM). <i>Echo feedback</i> sends the echoes back into the delay so they repeat and fade. Amount, mix and feedback can follow the music like any other effect, and every module setting is saved in scenes.</p>
       <p><b>Lens, analog and motion effects</b> run last, on the finished picture: pixel drift (the picture as dots, squares, an LED grid or halftone; each cell keeps its colour while it wanders and scatters with the sound; shape is set in its panel), dot lens (a drifting grid of little ball lenses; more = bigger, inverted discs), fisheye, handheld shake, dirty lens, film look, bloom, lens fringing, depth blur, VHS, CRT, datamosh smear (strongest just after a cut), mirror tiles, slit-scan, stutter/strobe and neon edges.</p>
-      <p><b>Video sampler</b>: load a video or tap <i>● Record camera</i> (front or back camera on a phone, your webcam on a computer; up to 12 s, 8 s on phones). The clip is cut into slices where the picture changes (Slice sensitivity and Max slices give more or fewer, or pick Even pieces), shown as a filmstrip you can tap. The sampler joins the source pool and the music plays it: a new slice on each beat (random or in order), on every hit, picked by the bass, or scrubbed by loudness. Speed (backwards to the left), Loudness speeds it up, Reverse chance, Stutter (short repeats on hits), Slice length and Ping-pong shape the playback. Level fades it to black, Mute takes it out of the mix and Unload empties it. Use <i>＋ Add video sampler</i> for up to three, each with its own clip; how many are open and their settings are saved with scenes, the clips are not.</p>
+      <p><b>Sampler (video + sound)</b>: load a video or a sound file, or tap <i>● Record</i> (on a phone this opens the camera app, which records picture and sound; on a computer it records your webcam and microphone in the page; up to 12 s of video, 8 s on phones, or 60 s of sound). The clip is cut into slices at its sound hits (or at picture changes, or into even pieces; Slice sensitivity and Max slices give more or fewer), shown as a filmstrip and waveform you can tap. <i>Plays</i> picks Video + sound, Video only or Sound only. The music plays it: a new slice on each beat (random or in order), on every hit, picked by the bass, or scrubbed by loudness. Speed (backwards to the left), Loudness speeds it up, Reverse chance, Stutter, Slice length and Ping-pong shape both picture and sound. Volume sets the sound, Picture level fades the picture, Mute silences and hides it, Unload empties it. Up to three samplers; their settings are saved with scenes, the clips are not.</p>
       <p><b>Generative sources</b> (section 2) are algorithms that draw live, driven by the music, and join your pool like any clip: Liquid light (a 60s oil-projector light show: coloured oils merge and split in a wobbling dish, swirl with the mids, swell with the bass and get shoved on kicks; pick a colour set or your own three oils and light colour, with or without the projector circle, under the source list), Moiré orbs (glowing fine-line spheres, ribbed orbs, wavy blobs, bubbles, a horizon glow or a spiral tunnel: bass swells them, mids ripple the edges, highs make the lines shimmer; pick shape and palette under the source list, or leave both on Auto to change with the music), Ink bloom (ink-in-water strands that burst on kicks, turn with the mids and drift with loud passages; pick its ink and paper colours under the source list), Woven ribbons, Sliced weave and Mirrored chevrons (op-art weaves whose rows slide on the beat), Disorder grid (after Vera Molnár / Georg Nees), Random walk (after Frieder Nake), Oscillons (your track as an oscilloscope figure, after Ben Laposky), Harmonic dots (after John Whitney), Cube studies (after Manfred Mohr), Chance collage and Cut-up strips (built from your own images and clips, after Arp, Höch and Burroughs), Rotoreliefs (after Duchamp), Rule drawing (after Sol LeWitt), Squares &amp; stripes (after Albers, Stella and Agnes Martin) and Event score (your own words, after Fluxus). They're remembered between sessions.</p>
       <p><b>Scenes</b> store every setting in sections 3 and 4 (mappings, cuts, blend, crossfade, beat sensitivity). They're kept in this browser; use Export to save them to a file you can back up, share or Import on another computer. Each scene gets a button under Live performance that you can map to a MIDI pad.</p>
       <p>Everything runs on your computer; files never leave it.</p>
@@ -2992,7 +2998,7 @@ function computeVals(){
 function frame(now){
   if (OFF){ requestAnimationFrame(frame); return; } // offline render owns the canvas
   const dt=Math.min(0.1,(now-lastT)/1000); lastT=now;
-  analyse(now, dt); tapClock(now);
+  analyse(now, dt); tapClock(now); if (typeof vsmTick==='function') vsmTick(dt);
   const rate = computeVals();
   for (const m of [L.main,L.ovl]) if (m && m.type==='video' && Math.abs(m.el.playbackRate-rate)>0.05) m.el.playbackRate=rate;
   uploadVideo(L.main,'main'); uploadVideo(L.ovl,'ovl'); if (L.prev && fadeAmt(now)<1) uploadVideo(L.prev,'prev');
@@ -3750,17 +3756,20 @@ function oilGen(){
   ps.onchange=()=>{ if (OIL_SETS[ps.value]){ S.oil=Object.assign({disc:$('oilDisc').checked},OIL_SETS[ps.value]); save(); set(); } };
 })();
 /* ============================================================
-   Video sampler: a clip (loaded or recorded from the camera) cut into slices at its picture changes;
-   the music picks, loops, reverses and stutters the slices. Up to three, each a source in the pool.
+   Sampler (video + sound): a clip or a sound file (loaded, or recorded) cut into slices at its sound hits
+   (or picture changes, or even pieces). The music picks, loops, reverses and stutters the slices; each slice
+   plays its picture, its sound, or both. Up to three, each a source in the pool.
    ============================================================ */
 var VSM_READY=false;
-const VSM_FPS=20, VSM_COARSE=matchMedia('(pointer:coarse)').matches, VSM_LONG=VSM_COARSE?320:432, VSM_MAX=VSM_COARSE?8:12;
-const VSM_DEF={sens:.5, max:16, cuts:'change', mode:'beat', speed:1, push:.3, rev:.15, stut:.2, len:1, pp:false, show:false, mute:false, bright:1, cam:VSM_COARSE?'environment':'user'};
+const VSM_FPS=20, VSM_COARSE=matchMedia('(pointer:coarse)').matches, VSM_LONG=VSM_COARSE?320:432, VSM_MAX=VSM_COARSE?8:12, VSM_AMAX=60;
+const VSM_DEF={sens:.5, max:16, cuts:'hits', out:'both', vol:1, mode:'beat', speed:1, push:.3, rev:.15, stut:.2, len:1, pp:false, show:false, mute:false, bright:1, cam:VSM_COARSE?'environment':'user'};
 const VSM_COLS=['#7cf2c8','#ff5fa2','#ffcc66','#8fb4ff'];
-function vsmState(){ if (!Array.isArray(S.vsmp)) S.vsmp=[]; for (let i=0;i<3;i++){ const c=S.vsmp[i]||(S.vsmp[i]={show:i===0}); for (const k in VSM_DEF) if (c[k]===undefined) c[k]=VSM_DEF[k]; } S.vsmp[0].show=true; }
+function vsmState(){ if (!Array.isArray(S.vsmp)) S.vsmp=[]; for (let i=0;i<3;i++){ const c=S.vsmp[i]||(S.vsmp[i]={show:i===0}); for (const k in VSM_DEF) if (c[k]===undefined) c[k]=VSM_DEF[k]; if (c.cuts==='change'&&!c._v13){ c.cuts='hits'; } c._v13=1; } S.vsmp[0].show=true; }
 vsmState();
-const VSM=[0,1,2].map(i=>({i, frames:[], diffs:[], on:[0], w:0, h:0, name:'', item:null, rec:null, P:{idx:-1,pos:0,dir:1,a:0,b:1,stut:0,sa:0}, lastT:0, el:document.querySelector(`.vsm[data-vslot="${i+1}"]`)}));
+const VSM=[0,1,2].map(i=>({i, frames:[], diffs:[], buf:null, rev:null, onset:null, dur:0, on:[0], w:0, h:0, name:'', note:'', item:null, rec:null, out:null, voice:null, upF:-1,
+  P:{idx:-1,pos:0,dir:1,a:0,b:1,stut:0,sa:0}, lastT:0, el:document.querySelector(`.vsm[data-vslot="${i+1}"]`)}));
 const vsmTiny=document.createElement('canvas'); vsmTiny.width=24; vsmTiny.height=14; const vsmTx=vsmTiny.getContext('2d',{willReadFrequently:true});
+const vsmEmpty='Nothing loaded: load a video or sound file, or record';
 function vsmMsg(sl,t){ $('vsmName'+(sl.i+1)).textContent=t; }
 function vsmReset(sl,sw,sh){ const k=VSM_LONG/Math.max(sw,sh,1); sl.w=Math.max(2,Math.round(sw*k)); sl.h=Math.max(2,Math.round(sh*k)); sl.frames=[]; sl.diffs=[]; sl.prevL=null; sl.on=[0]; sl.P.idx=-1; }
 function vsmGrab(sl,src,mirror){
@@ -3770,141 +3779,236 @@ function vsmGrab(sl,src,mirror){
   for (let j=0;j<336;j++){ L[j]=(d[j*4]*.3+d[j*4+1]*.59+d[j*4+2]*.11)/255; if (sl.prevL) df+=Math.abs(L[j]-sl.prevL[j]); }
   sl.prevL=L; sl.frames.push(c); sl.diffs.push(df/336); return c;
 }
-async function vsmLoad(sl,file){
-  if (!file) return; if (sl.rec) vsmRecStop(sl); vsmMsg(sl,'Reading '+file.name+'…');
-  const url=URL.createObjectURL(file), v=document.createElement('video'); v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto'; v.src=url;
-  try{ await new Promise((res,rej)=>{ v.onloadeddata=res; v.onerror=()=>rej(new Error('decode')); setTimeout(()=>rej(new Error('timeout')),20000); }); }
-  catch(e){ vsmMsg(sl,'Could not read that video on this device. Try MP4 or MOV.'); URL.revokeObjectURL(url); return; }
-  vsmReset(sl,v.videoWidth,v.videoHeight);
-  const dur=Math.min(isFinite(v.duration)&&v.duration>0?v.duration:VSM_MAX, VSM_MAX), need=Math.max(2,Math.round(dur*VSM_FPS));
-  try{ v.currentTime=0; await v.play(); }catch(e){}
-  await new Promise(res=>{ let next=0, last=null, done=false;
-    const fin=()=>{ if (done) return; done=true; v.pause(); res(); };
-    const tick=()=>{ if (done) return; const t=v.currentTime;
-      if (t>=next){ last=vsmGrab(sl,v,false); next+=1/VSM_FPS; while (next<=t && sl.frames.length<need){ sl.frames.push(last); sl.diffs.push(0); next+=1/VSM_FPS; } }
-      vsmMsg(sl,'Reading '+file.name+'… '+Math.round(sl.frames.length/need*100)+'%');
-      if (v.ended || sl.frames.length>=need || t>=dur) return fin();
-      if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(tick); else requestAnimationFrame(tick); };
-    v.onended=()=>{ if (!sl.frames.length) vsmGrab(sl,v,false); fin(); };
-    setTimeout(fin,(dur+8)*1000); tick(); });
-  URL.revokeObjectURL(url);
-  if (!sl.frames.length){ vsmMsg(sl,'Could not play that video on this device. Try MP4 or MOV.'); return; }
-  sl.name=file.name+((v.duration||0)>VSM_MAX+.5?` (first ${VSM_MAX} s)`:''); vsmFinish(sl);
+/* ---- sound: decode, trim, reverse, onset curve ---- */
+async function vsmDecode(file){
+  try{ ensureAudio(); const ab=await file.arrayBuffer();
+    return await new Promise((res,rej)=>{ const p=actx.decodeAudioData(ab,res,rej); if (p&&p.then) p.then(res,rej); }); }catch(e){ return null; }
 }
+function vsmSetSound(sl,buf,maxSec){
+  if (!buf){ sl.buf=sl.rev=sl.onset=null; return; }
+  const sr=buf.sampleRate, ch=Math.min(2,buf.numberOfChannels), n=Math.min(buf.length,Math.round(maxSec*sr));
+  const b=new AudioBuffer({length:n,numberOfChannels:ch,sampleRate:sr}), r=new AudioBuffer({length:n,numberOfChannels:ch,sampleRate:sr});
+  for (let c=0;c<ch;c++){ const s=buf.getChannelData(c), d=b.getChannelData(c), e=r.getChannelData(c); for (let i=0;i<n;i++){ d[i]=s[i]; e[n-1-i]=s[i]; } }
+  sl.buf=b; sl.rev=r;
+  // onset strength per 512-sample hop: rise in high-passed energy (the hits)
+  const hop=512, a=b.getChannelData(0), a2=ch>1?b.getChannelData(1):a, F=Math.floor(n/hop), E=new Float32Array(F), O=new Float32Array(F); let prev=0, pk=0;
+  for (let f=0;f<F;f++){ let e=0; for (let i=f*hop;i<(f+1)*hop;i++){ const x=(a[i]+a2[i])*.5, dd=x-prev; prev=x; e+=dd*dd; if (Math.abs(x)>pk) pk=Math.abs(x); } E[f]=Math.log(1e-9+e); }
+  for (let f=1;f<F;f++) O[f]=Math.max(0,E[f]-E[f-1]);
+  sl.onset=O; sl.hop=hop/sr; sl.silent=pk<.003;
+}
+async function vsmLoad(sl,file){
+  if (!file) return; if (sl.rec) vsmRecStop(sl); vsmStopVoice(sl); vsmMsg(sl,'Reading '+file.name+'…');
+  const isVid=/^video\//.test(file.type)||/\.(mp4|mov|m4v|webm|3gp)$/i.test(file.name);
+  const sound=await vsmDecode(file);
+  sl.frames=[]; sl.diffs=[];
+  if (isVid){
+    const url=URL.createObjectURL(file), v=document.createElement('video'); v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto'; v.src=url;
+    let ok=true; try{ await new Promise((res,rej)=>{ v.onloadeddata=res; v.onerror=()=>rej(new Error('decode')); setTimeout(()=>rej(new Error('timeout')),20000); }); }catch(e){ ok=false; }
+    if (ok && v.videoWidth){
+      vsmReset(sl,v.videoWidth,v.videoHeight);
+      const dur=Math.min(isFinite(v.duration)&&v.duration>0?v.duration:VSM_MAX, VSM_MAX), need=Math.max(2,Math.round(dur*VSM_FPS));
+      try{ v.currentTime=0; await v.play(); }catch(e){}
+      await new Promise(res=>{ let next=0, last=null, done=false;
+        const fin=()=>{ if (done) return; done=true; v.pause(); res(); };
+        const tick=()=>{ if (done) return; const t=v.currentTime;
+          if (t>=next){ last=vsmGrab(sl,v,false); next+=1/VSM_FPS; while (next<=t && sl.frames.length<need){ sl.frames.push(last); sl.diffs.push(0); next+=1/VSM_FPS; } }
+          vsmMsg(sl,'Reading '+file.name+'… '+Math.round(sl.frames.length/need*100)+'%');
+          if (v.ended || sl.frames.length>=need || t>=dur) return fin();
+          if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(tick); else requestAnimationFrame(tick); };
+        v.onended=()=>{ if (!sl.frames.length) vsmGrab(sl,v,false); fin(); };
+        setTimeout(fin,(dur+8)*1000); tick(); });
+      sl.name=file.name+((v.duration||0)>VSM_MAX+.5?` (first ${VSM_MAX} s)`:'');
+    }
+    URL.revokeObjectURL(url);
+  }
+  if (!sl.frames.length && !sound){ vsmMsg(sl,'Could not read that file on this device. Try MP4/MOV video or MP3/M4A/WAV sound.'); return; }
+  if (!sl.frames.length) sl.name=file.name+((sound.duration>VSM_AMAX+.5)?` (first ${VSM_AMAX} s)`:'');
+  vsmSetSound(sl,sound,sl.frames.length?sl.frames.length/VSM_FPS:VSM_AMAX);
+  vsmFinish(sl);
+}
+/* ---- record in the page: camera + mic together (desktop); phones use the camera app instead ---- */
 async function vsmRecStart(sl){
-  const cfg=S.vsmp[sl.i]; let stream;
-  if (!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ vsmMsg(sl,'This browser cannot reach the camera from this page.'); return; }
-  vsmMsg(sl,'Asking for the camera…');
-  try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:cfg.cam, width:{ideal:640}, height:{ideal:480}}, audio:false}); }
-  catch(e){ vsmMsg(sl,e&&e.name==='NotAllowedError'?'Camera access is blocked for this site: allow it in the browser or phone settings, then reload.':'No camera found: '+((e&&e.name)||'error')); return; }
-  const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.srcObject=stream;
+  const cfg=S.vsmp[sl.i], md=navigator.mediaDevices; let stream, noMic='';
+  if (!md||!md.getUserMedia){ vsmMsg(sl,'This browser cannot reach the camera from this page.'); return; }
+  ensureAudio(); try{ actx.resume(); }catch(e){}
+  vsmMsg(sl,'Asking for the camera and microphone…');
+  const vc={facingMode:cfg.cam, width:{ideal:640}, height:{ideal:480}};
+  try{ stream=await md.getUserMedia({video:vc, audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}}); }
+  catch(e){ try{ stream=await md.getUserMedia({video:vc, audio:false}); noMic=' (no sound: the microphone was not available)'; }
+    catch(e2){ vsmMsg(sl,e2&&e2.name==='NotAllowedError'?'Camera access is blocked for this site: allow it in the browser or phone settings, then reload.':'No camera found: '+((e2&&e2.name)||'error')); return; } }
+  vsmStopVoice(sl);
+  const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.srcObject=new MediaStream(stream.getVideoTracks());
   try{ await v.play(); }catch(e){}
   await new Promise(r=>{ const w=()=>v.videoWidth?r():setTimeout(w,50); w(); });
   vsmReset(sl,v.videoWidth,v.videoHeight); const mirror=cfg.cam==='user', t0=performance.now();
-  sl.rec={stream,v,timer:setInterval(()=>{ const secs=(performance.now()-t0)/1000, want=Math.min(VSM_MAX*VSM_FPS,Math.floor(secs*VSM_FPS)+1);
+  const R={stream,v,noMic,L:[],Rr:[],len:0};
+  if (stream.getAudioTracks().length){ try{ await actx.resume(); }catch(e){}
+    R.src=actx.createMediaStreamSource(new MediaStream(stream.getAudioTracks())); R.proc=actx.createScriptProcessor(4096,2,2); R.sink=actx.createGain(); R.sink.gain.value=0;
+    R.proc.onaudioprocess=e=>{ if (!sl.rec) return; const ib=e.inputBuffer, a=ib.getChannelData(0), b=ib.numberOfChannels>1?ib.getChannelData(1):a; R.L.push(new Float32Array(a)); R.Rr.push(new Float32Array(b)); R.len+=a.length; };
+    R.src.connect(R.proc); R.proc.connect(R.sink); R.sink.connect(actx.destination); }
+  R.timer=setInterval(()=>{ const secs=(performance.now()-t0)/1000, want=Math.min(VSM_MAX*VSM_FPS,Math.floor(secs*VSM_FPS)+1);
     const c=vsmGrab(sl,v,mirror); while (sl.frames.length<want){ sl.frames.push(c); sl.diffs.push(0); }   // keep real time if the device is slow
-    vsmStrip(sl,true); vsmMsg(sl,'Recording… '+secs.toFixed(1)+' s (tap Stop when done, max '+VSM_MAX+' s)');
-    if (sl.frames.length>=VSM_MAX*VSM_FPS) vsmRecStop(sl); },1000/VSM_FPS)};
-  const b=$('vsmRec'+(sl.i+1)); b.textContent='■ Stop'; b.classList.add('rec');
+    vsmStrip(sl,true); vsmMsg(sl,'Recording… '+secs.toFixed(1)+' s (tap Stop when done, max '+VSM_MAX+' s)'+noMic);
+    if (sl.frames.length>=VSM_MAX*VSM_FPS) vsmRecStop(sl); },1000/VSM_FPS);
+  sl.rec=R; const b=$('vsmRec'+(sl.i+1)); b.textContent='■ Stop'; b.classList.add('rec');
 }
 function vsmRecStop(sl){
-  if (!sl.rec) return; clearInterval(sl.rec.timer); sl.rec.stream.getTracks().forEach(t=>t.stop()); sl.rec=null;
-  const b=$('vsmRec'+(sl.i+1)); b.textContent='● Record camera'; b.classList.remove('rec');
+  const R=sl.rec; if (!R) return; clearInterval(R.timer); sl.rec=null;
+  try{ if (R.src){ R.src.disconnect(); R.proc.disconnect(); R.sink.disconnect(); } }catch(e){}
+  R.stream.getTracks().forEach(t=>t.stop());
+  const b=$('vsmRec'+(sl.i+1)); b.textContent='● Record'; b.classList.remove('rec');
   if (sl.frames.length<4){ vsmMsg(sl,'Too short: record a little longer.'); sl.frames=[]; vsmStrip(sl); return; }
-  const d=new Date(); sl.name='Camera take '+[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':'); vsmFinish(sl);
+  let sound=null;
+  if (R.len>actx.sampleRate*.2){ const n=R.len; sound=new AudioBuffer({length:n,numberOfChannels:2,sampleRate:actx.sampleRate});
+    const dl=sound.getChannelData(0), dr=sound.getChannelData(1); let k=0; for (let j=0;j<R.L.length;j++){ dl.set(R.L[j].subarray(0,Math.min(R.L[j].length,n-k)),k); dr.set(R.Rr[j].subarray(0,Math.min(R.Rr[j].length,n-k)),k); k+=R.L[j].length; if (k>=n) break; }
+    let pk=0; for (let i=0;i<n;i++) pk=Math.max(pk,Math.abs(dl[i]),Math.abs(dr[i])); const g=pk>0?Math.min(8,.9/pk):1; for (let i=0;i<n;i++){ dl[i]*=g; dr[i]*=g; } }
+  const d=new Date(); sl.name='Camera take '+[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':')+(R.noMic?' (no sound)':'');
+  vsmSetSound(sl,sound,sl.frames.length/VSM_FPS); vsmFinish(sl);
 }
-function vsmFinish(sl){
-  vsmSlice(sl);
-  // the sampler becomes a source in the pool and goes live straight away
-  if (!sl.item){ const cv=document.createElement('canvas'), [gw,gh]=genSize(); cv.width=gw; cv.height=gh;
-    sl.item={type:'gen', vs:true, name:'Video sampler '+(sl.i+1), on:true, ready:true, el:cv, w:gw, h:gh, credit:'your clip, cut into slices', drawnAt:-1, lastT:0, gen:{draw:(g,w,h,c)=>vsmDraw(sl,g,w,h,c)}};
-    sl.item.g=cv.getContext('2d'); }
-  const muted=!!S.vsmp[sl.i].mute; sl.item.on=!muted;
-  if (!pool.includes(sl.item)){ pool.push(sl.item); $('hint').style.display='none'; }
-  if (!muted && L.main!==sl.item){ L.prev=L.main; L.main=sl.item; L.fadeStart=clock(); }
-  renderPool(); renderPoolMarks();
+/* ---- slices ---- */
+function vsmPeaks(curve,step,sens,mx,thrK,thrA,W,gap0,gap1){
+  const n=curve.length, cand=[];
+  for (let f=1;f<n-1;f++){ const v=curve[f]; if (v<curve[f-1]||v<curve[f+1]||v<=0) continue; let m=0,c=0; for (let j=Math.max(0,f-W);j<Math.min(n,f+W);j++){ m+=curve[j]; c++; } m/=c; if (v>m*thrK+thrA) cand.push([f,v]); }
+  cand.sort((x,y)=>y[1]-x[1]); const keep=Math.max(1,Math.ceil(cand.length*(.06+.94*Math.pow(sens,1.4)))), gap=(gap0-gap1*sens)/step, pick=[];
+  for (const [f] of cand.slice(0,keep)){ if (pick.length>=mx-1) break; if (f>=gap/2 && pick.every(g=>Math.abs(g-f)>=gap)) pick.push(f); }
+  return pick.sort((a,b)=>a-b).map(f=>Math.max(0,(f-1)*step));
 }
 function vsmSlice(sl){
-  const cfg=S.vsmp[sl.i], n=sl.frames.length; if (!n) return; const mx=+cfg.max||16; let note='';
-  const even=k=>Array.from({length:k},(_,j)=>Math.floor(j*n/k));
-  if (cfg.cuts==='even') sl.on=even(Math.max(2,Math.min(n,Math.round(2+cfg.sens*(mx-2)))));
-  else { const D=sl.diffs, W=10, cand=[];
-    for (let f=1;f<n-1;f++){ if (D[f]<D[f-1]||D[f]<D[f+1]||D[f]<=0) continue; let m=0,c=0; for (let j=Math.max(0,f-W);j<Math.min(n,f+W);j++){ m+=D[j]; c++; } m/=c; if (D[f]>m*1.3+.004) cand.push([f,D[f]]); }
-    cand.sort((x,y)=>y[1]-x[1]); const keep=Math.max(1,Math.ceil(cand.length*(.06+.94*Math.pow(cfg.sens,1.4)))), gap=Math.round((.6-.45*cfg.sens)*VSM_FPS), pick=[];
-    for (const [f] of cand.slice(0,keep)){ if (pick.length>=mx-1) break; if (f>=gap/2 && pick.every(g=>Math.abs(g-f)>=gap)) pick.push(f); }
-    sl.on=[0,...pick.sort((a,b)=>a-b)];
-    if (sl.on.length<3 && n>=VSM_FPS*2){ sl.on=even(Math.max(3,Math.min(mx,Math.round(2+cfg.sens*6)))); note=' (few picture changes, cut evenly)'; } }
-  sl.P.idx=-1; vsmMsg(sl,sl.name+' · '+sl.on.length+' slices · '+(n/VSM_FPS).toFixed(1)+' s'+note); vsmStrip(sl);
+  const cfg=S.vsmp[sl.i], hasV=sl.frames.length>0, hasA=!!sl.buf; if (!hasV&&!hasA) return;
+  sl.dur=hasV?sl.frames.length/VSM_FPS:sl.buf.duration; const mx=+cfg.max||16, D=sl.dur; let note='', cuts=cfg.cuts;
+  if (cuts==='hits' && (!hasA||sl.silent)){ cuts=hasV?'change':'even'; note=' (no sound hits, cut at picture changes)'; }
+  if (cuts==='change' && !hasV){ cuts='hits'; }
+  const even=k=>Array.from({length:k},(_,j)=>j*D/k);
+  let on;
+  if (cuts==='even') on=even(Math.max(2,Math.round(2+cfg.sens*(mx-2))));
+  else if (cuts==='hits') on=[0,...vsmPeaks(sl.onset,sl.hop,cfg.sens,mx,.7,.1,12,.3,.24)];
+  else on=[0,...vsmPeaks(sl.diffs,1/VSM_FPS,cfg.sens,mx,1.3,.004,10,.6,.45)];
+  on=on.filter((t,j)=>j===0||t>.03&&t<D-.05);
+  if (on.length<3 && D>=2 && cuts!=='even'){ on=even(Math.max(3,Math.min(mx,Math.round(2+cfg.sens*6)))); note=' (few hits, cut evenly)'; }
+  sl.on=on; sl.note=note; sl.P.idx=-1;
+  const what=hasV&&hasA?'video + sound':hasV?'video, no sound':'sound';
+  vsmMsg(sl,sl.name+' · '+what+' · '+on.length+' slices · '+D.toFixed(1)+' s'+note); vsmStrip(sl);
 }
+/* ---- where it goes: a source in the pool when it has pictures to show ---- */
+function vsmPlace(sl,goLive){
+  const cfg=S.vsmp[sl.i], visual=sl.frames.length>0 && cfg.out!=='audio' && cfg.show;
+  if (visual){
+    if (!sl.item){ const cv=document.createElement('canvas'), [gw,gh]=genSize(); cv.width=gw; cv.height=gh;
+      sl.item={type:'gen', vs:true, name:'Sampler '+(sl.i+1), on:true, ready:true, el:cv, w:gw, h:gh, credit:'your clip, cut into slices', drawnAt:-1, lastT:0, gen:{draw:(g,w,h,c)=>vsmDraw(sl,g,w,h,c)}};
+      sl.item.g=cv.getContext('2d'); }
+    const muted=!!cfg.mute; sl.item.on=!muted;
+    if (!pool.includes(sl.item)){ pool.push(sl.item); $('hint').style.display='none'; }
+    if (goLive && !muted && L.main!==sl.item){ L.prev=L.main; L.main=sl.item; L.fadeStart=clock(); }
+    if (muted){ if (L.main===sl.item){ cut('main'); if (L.main===sl.item) L.main=null; } if (L.ovl===sl.item) L.ovl=null; if (L.prev===sl.item) L.prev=null; }
+    else if (!L.main) cut('main');
+  } else if (sl.item && pool.includes(sl.item)) removeMedia(pool.indexOf(sl.item));
+  renderPool(); renderPoolMarks();
+}
+function vsmFinish(sl){ vsmSlice(sl); vsmPlace(sl,true); }
+/* ---- strip: filmstrip and/or waveform with numbered slices ---- */
 function vsmStrip(sl,live){
   const cv=$('vsmStrip'+(sl.i+1)); if (!cv) return; const g=cv.getContext('2d'), W=cv.width, H=cv.height, n=sl.frames.length;
   g.fillStyle=live?'#160d12':'#0f1115'; g.fillRect(0,0,W,H);
-  if (!n){ g.fillStyle='#8b909c'; g.font='13px system-ui'; g.fillText('Load a video or record from the camera: it gets cut at its picture changes',10,H/2+4); return; }
-  const tw=Math.max(16,Math.round(H*sl.w/sl.h)), cols=Math.ceil(W/tw);
-  if (live){ const f=sl.frames[n-1]; for (let k=0;k<cols;k++){ const fi=Math.max(0,n-cols+k); if (fi<n) g.drawImage(sl.frames[fi],k*tw,0,tw,H); }
+  if (live){ const tw=Math.max(16,Math.round(H*sl.w/sl.h)), cols=Math.ceil(W/tw); for (let k=0;k<cols;k++){ const fi=Math.max(0,n-cols+k); if (fi<n) g.drawImage(sl.frames[fi],k*tw,0,tw,H); }
     g.fillStyle='#ff5f6d'; g.beginPath(); g.arc(12,12,6,0,7); g.fill(); return; }
-  for (let k=0;k<cols;k++){ const fi=Math.min(n-1,Math.floor((k*tw+tw/2)/W*n)); g.drawImage(sl.frames[fi],k*tw,0,tw,H); }
-  g.fillStyle='#0008'; g.fillRect(0,H-14,W,14);
-  const D=sl.diffs; let dm=1e-6; for (const v of D) if (v>dm) dm=v; g.strokeStyle='#ffffff66'; g.beginPath(); for (let x=0;x<W;x++){ const v=D[Math.floor(x/W*n)]||0; g.lineTo(x,H-2-v/dm*10); } g.stroke();
+  if (!n && !sl.buf){ g.fillStyle='#8b909c'; g.font='13px system-ui'; g.fillText('Load a video or sound file, or record: it gets cut at its hits',10,H/2+4); return; }
+  const D=sl.dur||1;
+  if (n){ const tw=Math.max(16,Math.round(H*sl.w/sl.h)), cols=Math.ceil(W/tw); for (let k=0;k<cols;k++){ const fi=Math.min(n-1,Math.floor((k*tw+tw/2)/W*n)); g.drawImage(sl.frames[fi],k*tw,0,tw,H); } }
+  if (sl.buf){ const wh=n?30:H, y0=H-wh, d=sl.buf.getChannelData(0), per=Math.max(1,Math.floor(Math.min(d.length,D*sl.buf.sampleRate)/W));
+    if (n){ g.fillStyle='#000a'; g.fillRect(0,y0,W,wh); }
+    g.fillStyle=n?'#ffffffcc':'#7cf2c8'; for (let x=0;x<W;x++){ let mx=0; for (let j=x*per;j<(x+1)*per&&j<d.length;j+=4) mx=Math.max(mx,Math.abs(d[j])); const hh=Math.max(.5,mx*wh*.46); g.fillRect(x,y0+wh/2-hh,1,hh*2); } }
+  else if (n){ g.fillStyle='#0008'; g.fillRect(0,H-14,W,14); const Df=sl.diffs; let dm=1e-6; for (const v of Df) if (v>dm) dm=v; g.strokeStyle='#ffffff66'; g.beginPath(); for (let x=0;x<W;x++){ const v=Df[Math.floor(x/W*n)]||0; g.lineTo(x,H-2-v/dm*10); } g.stroke(); }
   const ns=sl.on.length, hot=performance.now()-sl.lastT<300;
-  for (let j=0;j<ns;j++){ const x0=sl.on[j]/n*W, x1=(sl.on[j+1]??n)/n*W;
+  for (let j=0;j<ns;j++){ const x0=sl.on[j]/D*W, x1=(sl.on[j+1]??D)/D*W;
     if (j===sl.P.idx){ g.fillStyle=hot?'#ffffff40':'#ffffff18'; g.fillRect(x0,0,x1-x0,H); }
     g.fillStyle=VSM_COLS[j%4]; g.fillRect(Math.floor(x0),0,2,H); g.font='bold 11px system-ui'; g.fillText(String(j+1),x0+4,12); }
-  if (sl.P.idx>=0){ const x=sl.P.pos/n*W; g.fillStyle='#fff'; g.fillRect(x,0,1,H); }
+  if (sl.P.idx>=0){ const x=sl.P.pos/D*W; g.fillStyle='#fff'; g.fillRect(x,0,1,H); }
+}
+/* ---- playback ---- */
+function vsmOut(sl){ if (!sl.out){ ensureAudio(); sl.out=actx.createGain(); sl.out.connect(actx.destination); if (recDest) sl.out.connect(recDest); } return sl.out; }
+function vsmStopVoice(sl,t){ const v=sl.voice; if (!v) return; sl.voice=null; try{ const ct=t||actx.currentTime; v.g.gain.cancelScheduledValues(ct); v.g.gain.setTargetAtTime(0,ct,.008); v.s.stop(ct+.06); }catch(e){} }
+function vsmSound(sl){
+  const cfg=S.vsmp[sl.i], P=sl.P; if (!sl.buf || cfg.out==='video' || cfg.mute || !cfg.show || OFF || !actx || actx.state!=='running') return;
+  const ct=actx.currentTime, D=sl.buf.duration, sp=Math.abs(cfg.speed*(1+cfg.push*(A.level||0)*2.5))||1, rate=Math.max(.25,Math.min(4,sp)), back=P.dir*Math.sign(cfg.speed||1)<0;
+  vsmStopVoice(sl,ct);
+  const s=actx.createBufferSource(), g=actx.createGain(); s.buffer=back?sl.rev:sl.buf; s.playbackRate.value=rate;
+  const vol=(cfg.vol??1)*.9; let st, len, dur;
+  if (P.stut){ const sl0=P.sa, sl1=Math.min(D,P.sa+P.stut); st=back?D-sl1:sl0; len=Math.max(.02,sl1-sl0); s.loop=true; s.loopStart=st; s.loopEnd=st+len; dur=Math.max(.05,beatMs()/1000); }
+  else { const a=Math.min(D,P.a), b=Math.min(D,P.b); st=back?D-b:a; len=Math.max(.02,b-a); dur=len/rate; }
+  g.gain.setValueAtTime(0,ct); g.gain.linearRampToValueAtTime(vol,ct+.004); g.gain.setValueAtTime(vol,ct+Math.max(.005,dur-.015)); g.gain.linearRampToValueAtTime(0,ct+dur);
+  s.connect(g); g.connect(vsmOut(sl)); s.start(ct,Math.max(0,st),P.stut?undefined:len+.01); s.stop(ct+dur+.03);
+  sl.voice={s,g};
 }
 function vsmTrig(sl,k,c){
-  const cfg=S.vsmp[sl.i], n=sl.frames.length, ns=sl.on.length, P=sl.P; k=((k%ns)+ns)%ns; P.idx=k;
-  const a=sl.on[k], b=sl.on[k+1]??n, len=Math.max(2,Math.round((b-a)*cfg.len)); P.a=a; P.b=Math.min(n,a+len);
-  P.dir=c.rnd()<cfg.rev?-1:1; P.pos=P.dir*Math.sign(cfg.speed||1)>0?P.a:P.b-.01; P.stut=0;
-  if (c.rnd()<cfg.stut){ P.stut=Math.max(2,Math.round(VSM_FPS*(c.beatMs||500)/1000/4)); P.sa=P.pos; }
-  sl.lastT=performance.now();
+  const cfg=S.vsmp[sl.i], D=sl.dur, ns=sl.on.length, P=sl.P; k=((k%ns)+ns)%ns; P.idx=k;
+  const a=sl.on[k], b=sl.on[k+1]??D, len=Math.max(.1,(b-a)*cfg.len); P.a=a; P.b=Math.min(D,a+len);
+  P.dir=c.rnd()<cfg.rev?-1:1; P.pos=P.dir*Math.sign(cfg.speed||1)>0?P.a:P.b-.001; P.stut=0;
+  if (c.rnd()<cfg.stut){ P.stut=Math.max(.05,(c.beatMs||500)/1000/4); P.sa=Math.max(0,Math.min(D-P.stut,P.dir>0?P.a:P.b-P.stut)); }
+  sl.lastT=performance.now(); vsmSound(sl);
 }
-function vsmDraw(sl,g,w,h,c){
-  const cfg=S.vsmp[sl.i], n=sl.frames.length, P=sl.P, A=c.A;
-  if (!n){ g.fillStyle='#000'; g.fillRect(0,0,w,h); return; }
+// one step per frame for every loaded sampler, shown or not (a sound-only sampler has no picture to draw)
+let vsmFrameNo=0;
+function vsmUpdate(sl,c){
+  const cfg=S.vsmp[sl.i], D=sl.dur, P=sl.P, Al=c.A; if (!D || !cfg.show) return;
   const ns=sl.on.length, hit=c.onset||c.beat, other=()=>{ if (ns<2) return 0; let k; do k=Math.floor(c.rnd()*ns); while (k===P.idx); return k; };
   if (P.idx<0) vsmTrig(sl,0,c);
-  if (cfg.mode==='scrub'){ const tgt=Math.min(n-1,(A.level||0)*1.4*(n-1)); P.pos+=(tgt-P.pos)*Math.min(1,c.dt*5); let k=0; for (let j=0;j<ns;j++) if (sl.on[j]<=P.pos) k=j; P.idx=k; }
-  else {
-    if (cfg.mode==='beat'&&c.beat) vsmTrig(sl,other(),c);
-    else if (cfg.mode==='seq'&&c.beat) vsmTrig(sl,P.idx+1,c);
-    else if (cfg.mode==='hits'&&hit) vsmTrig(sl,other(),c);
-    else if (cfg.mode==='bass'&&hit) vsmTrig(sl,Math.floor(Math.min(.999,(A.bass||0)*1.2)*ns),c);
-    const sp=cfg.speed*(1+cfg.push*(A.level||0)*2.5); P.pos+=c.dt*VSM_FPS*sp*P.dir;
-    if (P.stut){ const lo=Math.min(P.sa,P.sa+P.stut*Math.sign(sp*P.dir)), hi=lo+P.stut; if (P.pos>=hi) P.pos=lo; if (P.pos<lo) P.pos=hi-.01; P.pos=Math.max(0,Math.min(n-.01,P.pos)); }
-    else if (P.pos>=P.b){ if (cfg.pp){ P.dir=-P.dir; P.pos=P.b-.01; } else P.pos=P.a; }
-    else if (P.pos<P.a){ if (cfg.pp){ P.dir=-P.dir; P.pos=P.a; } else P.pos=P.b-.01; }
-  }
-  const f=sl.frames[Math.max(0,Math.min(n-1,Math.floor(P.pos)))], k=Math.max(w/sl.w,h/sl.h), dw=sl.w*k, dh=sl.h*k;
+  if (cfg.mode==='scrub'){ const tgt=Math.min(D-.001,(Al.level||0)*1.4*D); P.pos+=(tgt-P.pos)*Math.min(1,c.dt*5); let k=0; for (let j=0;j<ns;j++) if (sl.on[j]<=P.pos) k=j;
+    if (k!==P.idx){ P.idx=k; P.a=sl.on[k]; P.b=sl.on[k+1]??D; P.dir=1; P.stut=0; sl.lastT=performance.now(); vsmSound(sl); } return; }
+  if (cfg.mode==='beat'&&c.beat) vsmTrig(sl,other(),c);
+  else if (cfg.mode==='seq'&&c.beat) vsmTrig(sl,P.idx+1,c);
+  else if (cfg.mode==='hits'&&hit) vsmTrig(sl,other(),c);
+  else if (cfg.mode==='bass'&&hit) vsmTrig(sl,Math.floor(Math.min(.999,(Al.bass||0)*1.2)*ns),c);
+  const sp=cfg.speed*(1+cfg.push*(Al.level||0)*2.5); P.pos+=c.dt*sp*P.dir;
+  if (P.stut){ const lo=P.sa, hi=P.sa+P.stut; if (P.pos>=hi) P.pos=lo; if (P.pos<lo) P.pos=hi-.001; }
+  else if (P.pos>=P.b){ if (cfg.pp){ P.dir=-P.dir; P.pos=P.b-.001; } else P.pos=P.a; }
+  else if (P.pos<P.a){ if (cfg.pp){ P.dir=-P.dir; P.pos=P.a; } else P.pos=P.b-.001; }
+  P.pos=Math.max(0,Math.min(D-.001,P.pos));
+}
+function vsmTick(dt){
+  if (!VSM_READY) return; vsmFrameNo++;
+  const c={dt, A, beat:A.beat===1, onset:A.onset===1, rnd, beatMs:beatMs()};
+  for (const sl of VSM) if (sl.dur && !sl.rec){ sl.upF=vsmFrameNo; vsmUpdate(sl,c); }
+  for (const sl of VSM) if (sl.out){ const cfg=S.vsmp[sl.i], gv=cfg.mute||!cfg.show||cfg.out==='video'?0:1; if (Math.abs(sl.out.gain.value-gv)>.01) sl.out.gain.setTargetAtTime(gv,actx.currentTime,.02); }
+}
+function vsmDraw(sl,g,w,h,c){
+  const cfg=S.vsmp[sl.i], n=sl.frames.length, P=sl.P;
+  if (!n){ g.fillStyle='#000'; g.fillRect(0,0,w,h); return; }
+  if (OFF || sl.upF!==vsmFrameNo){ sl.upF=vsmFrameNo; vsmUpdate(sl,c); }
+  const f=sl.frames[Math.max(0,Math.min(n-1,Math.floor(P.pos*VSM_FPS)))], k=Math.max(w/sl.w,h/sl.h), dw=sl.w*k, dh=sl.h*k;
   g.imageSmoothingEnabled=true; const br=cfg.bright??1; if (br<1){ g.fillStyle='#000'; g.fillRect(0,0,w,h); g.globalAlpha=br; } g.drawImage(f,(w-dw)/2,(h-dh)/2,dw,dh); g.globalAlpha=1;
 }
-function vsmMute(sl){ const m=sl.item; if (!m) return; m.on=!S.vsmp[sl.i].mute;
-  if (!m.on){ if (L.main===m) cut('main'); if (L.main===m){ L.main=null; } if (L.ovl===m) L.ovl=null; if (L.prev===m) L.prev=null; } else if (!L.main) cut('main');
-  renderPool(); }
-function vsmClear(sl){ if (sl.rec) vsmRecStop(sl); sl.frames=[]; sl.diffs=[]; sl.on=[0]; sl.name=''; sl.P.idx=-1;
-  if (sl.item && pool.includes(sl.item)) removeMedia(pool.indexOf(sl.item)); vsmMsg(sl,'No clip yet: load a video or record from the camera'); vsmStrip(sl); }
+function vsmClear(sl){ if (sl.rec) vsmRecStop(sl); vsmStopVoice(sl); sl.frames=[]; sl.diffs=[]; sl.buf=sl.rev=sl.onset=null; sl.dur=0; sl.on=[0]; sl.name=''; sl.P.idx=-1;
+  if (sl.item && pool.includes(sl.item)) removeMedia(pool.indexOf(sl.item)); vsmMsg(sl,vsmEmpty); vsmStrip(sl); }
 function vsmSync(){
   if (!VSM_READY) return; vsmState();
   for (const sl of VSM){ const cfg=S.vsmp[sl.i]; sl.el.classList.toggle('shown',!!cfg.show);
     sl.el.querySelectorAll('[data-v]').forEach(el=>{ const v=cfg[el.dataset.v]; if (el.type==='checkbox') el.checked=!!v; else el.value=v; });
-    if (sl.item){ const want=!!cfg.show; if (!want && pool.includes(sl.item)) removeMedia(pool.indexOf(sl.item)); } }
+    if (!cfg.show) vsmStopVoice(sl);
+    if (sl.dur) vsmPlace(sl,false); }
   $('vsmAdd').disabled=S.vsmp.every(c=>c.show);
 }
 for (const sl of VSM){
   const n=sl.i+1;
   sl.el.querySelectorAll('[data-v]').forEach(el=>el.addEventListener(el.tagName==='SELECT'||el.type==='checkbox'?'change':'input',()=>{
     const k=el.dataset.v, cfg=S.vsmp[sl.i]; cfg[k]=el.type==='checkbox'?el.checked:(typeof VSM_DEF[k]==='number'?+el.value:el.value);
-    if (k==='sens'||k==='max'||k==='cuts') vsmSlice(sl); if (k==='mute') vsmMute(sl); save(); }));
+    if (k==='sens'||k==='max'||k==='cuts') vsmSlice(sl);
+    if (k==='mute'||k==='out'){ if (cfg.mute||cfg.out==='video') vsmStopVoice(sl); if (sl.dur) vsmPlace(sl,k==='out'); }
+    save(); }));
   $('vsmClear'+n).onclick=()=>vsmClear(sl);
   $('vsmFile'+n).onchange=e=>{ vsmLoad(sl,e.target.files[0]); e.target.value=''; };
-  $('vsmRec'+n).onclick=()=>{ sl.rec?vsmRecStop(sl):vsmRecStart(sl); };
-  $('vsmStrip'+n).onclick=e=>{ if (!sl.frames.length) return; const r=e.currentTarget.getBoundingClientRect(), fi=(e.clientX-r.left)/r.width*sl.frames.length; let k=0; for (let j=0;j<sl.on.length;j++) if (sl.on[j]<=fi) k=j;
-    if (!pool.includes(sl.item)||L.main!==sl.item) vsmFinish(sl); vsmTrig(sl,k,{rnd,beatMs:beatMs()}); };
+  // phones: Record opens the phone's own camera app (it records picture and sound reliably); computers record in the page
+  const cap=$('vsmCap'+n); cap.onchange=e=>{ vsmLoad(sl,e.target.files[0]); e.target.value=''; };
+  $('vsmRec'+n).onclick=()=>{ if (sl.rec) return vsmRecStop(sl);
+    if (VSM_COARSE){ cap.setAttribute('capture',S.vsmp[sl.i].cam==='user'?'user':'environment'); ensureAudio(); try{ actx.resume(); }catch(e){} cap.click(); }
+    else vsmRecStart(sl); };
+  $('vsmStrip'+n).onclick=e=>{ if (!sl.dur) return; ensureAudio(); try{ actx.resume(); }catch(er){}
+    const r=e.currentTarget.getBoundingClientRect(), t=(e.clientX-r.left)/r.width*sl.dur; let k=0; for (let j=0;j<sl.on.length;j++) if (sl.on[j]<=t) k=j;
+    if (sl.frames.length && S.vsmp[sl.i].out!=='audio' && L.main!==sl.item) vsmPlace(sl,true); vsmTrig(sl,k,{rnd,beatMs:beatMs()}); };
 }
 $('vsmAdd').onclick=()=>{ const i=S.vsmp.findIndex(c=>!c.show); if (i>=0){ S.vsmp[i].show=true; save(); vsmSync(); vsmStrip(VSM[i]); } };
 document.querySelectorAll('.vsmDel').forEach(b=>b.onclick=()=>{ const i=+b.dataset.n-1, sl=VSM[i]; if (sl.rec) vsmRecStop(sl); S.vsmp[i].show=false; save(); vsmSync(); });
-setInterval(()=>{ for (const sl of VSM) if (!sl.rec && sl.frames.length && S.vsmp[sl.i].show) vsmStrip(sl); },150);
-VSM_READY=true; vsmSync(); VSM.forEach(sl=>vsmStrip(sl));
+setInterval(()=>{ for (const sl of VSM) if (!sl.rec && sl.dur && S.vsmp[sl.i].show) vsmStrip(sl); },150);
+VSM_READY=true; vsmSync(); VSM.forEach(sl=>{ vsmMsg(sl,vsmEmpty); vsmStrip(sl); });
 const DEFAULT_WORDS=['listen','wait for the drop','count the beats until silence','turn toward the loudest sound','draw one line','repeat','stand still for one bar','erase everything','now','this is a score'].join('\n');
 function addGen(name){
   const G=GENS[name]; if (!G) return;
