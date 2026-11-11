@@ -34,6 +34,7 @@ button.rec.on{background:var(--accent2);color:#2a0013;animation:blink 1s infinit
 select,input[type=number]{background:#0f1115;color:var(--text);border:1px solid #363b47;border-radius:5px;padding:4px 5px;font:inherit}
 input[type=range]{width:100%;accent-color:var(--accent)}
 input[type=file]{display:none}
+input[type=color]{width:34px;height:26px;padding:0 2px;border:1px solid #363b47;border-radius:5px;background:#0f1115;vertical-align:middle}
 label.small{color:var(--dim);font-size:11px}
 #trackName{color:var(--dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 #seek{width:100%}
@@ -144,7 +145,9 @@ label.small,.small{font-size:12px}
         <button id="clearPool">Clear</button>
       </div>
       <div class="row"><select id="genSel" style="flex:1;min-width:0"></select></div>
-      <div class="row"><button id="genAdd">Add generative source</button><button id="genAll">Add all 14</button></div>
+      <div class="row" id="orbRow"><span class="small">Moiré orbs</span><label class="small">Shape <select id="orbShape"><option value="auto">Auto (changes every 4 bars)</option><option value="sphere">Sphere</option><option value="ribbed">Ribbed orb</option><option value="wavy">Wavy blob</option><option value="bubbles">Bubbles</option><option value="horizon">Horizon glow</option><option value="tunnel">Spiral tunnel</option></select></label><label class="small">Palette <select id="orbPal"></select></label></div>
+      <div class="row" id="inkRow"><span class="small">Ink bloom colours</span><label class="small">Ink <input type="color" id="inkC1"></label><label class="small">Ink 2 <input type="color" id="inkC2"></label><label class="small">Paper <input type="color" id="inkBg"></label><button id="inkReset" title="Back to black ink on white">Reset</button></div>
+      <div class="row"><button id="genAdd">Add generative source</button><button id="genAll">Add all 16</button></div>
       <details><summary class="small">Event score words (one per line)</summary><textarea id="genWords" rows="6" style="width:100%;background:#0f1115;color:var(--text);border:1px solid #363b47;border-radius:5px;font:12px ui-monospace,monospace"></textarea></details>
       <div class="small" style="color:var(--dim)">Click a thumbnail to toggle it in/out of the mix. Green = main layer, pink = overlay.</div>
       <div id="pool"></div>
@@ -274,7 +277,7 @@ label.small,.small{font-size:12px}
       <p><b>Live</b>: pick your audio interface under Input, then Live input. Use the tap clock if the room is too noisy for beat detection. Open the output window on the projector. MIDI learn: press it, click any dashed control, move a knob or hit a pad.</p>
       <p><b>Effect modules</b> run after the main look. <i>Video feedback</i> feeds each frame back into itself zoomed, rotated and shifted, for tunnels and spirals. <i>Video delay/echo</i> keeps the last 120 frames and layers up to 4 delayed copies (taps) on top, timed in ms or synced to the beat (tap tempo or detected BPM). <i>Echo feedback</i> sends the echoes back into the delay so they repeat and fade. Amount, mix and feedback can follow the music like any other effect, and every module setting is saved in scenes.</p>
       <p><b>Lens, analog and motion effects</b> run last, on the finished picture: pixel drift (the picture as dots, squares, an LED grid or halftone; each cell keeps its colour while it wanders and scatters with the sound; shape is set in its panel), dot lens (a drifting grid of little ball lenses; more = bigger, inverted discs), fisheye, handheld shake, dirty lens, film look, bloom, lens fringing, depth blur, VHS, CRT, datamosh smear (strongest just after a cut), mirror tiles, slit-scan, stutter/strobe and neon edges.</p>
-      <p><b>Generative sources</b> (section 2) are algorithms that draw live, driven by the music, and join your pool like any clip: Woven ribbons, Sliced weave and Mirrored chevrons (op-art weaves whose rows slide on the beat), Disorder grid (after Vera Molnár / Georg Nees), Random walk (after Frieder Nake), Oscillons (your track as an oscilloscope figure, after Ben Laposky), Harmonic dots (after John Whitney), Cube studies (after Manfred Mohr), Chance collage and Cut-up strips (built from your own images and clips, after Arp, Höch and Burroughs), Rotoreliefs (after Duchamp), Rule drawing (after Sol LeWitt), Squares &amp; stripes (after Albers, Stella and Agnes Martin) and Event score (your own words, after Fluxus). They're remembered between sessions.</p>
+      <p><b>Generative sources</b> (section 2) are algorithms that draw live, driven by the music, and join your pool like any clip: Moiré orbs (glowing fine-line spheres, ribbed orbs, wavy blobs, bubbles, a horizon glow or a spiral tunnel: bass swells them, mids ripple the edges, highs make the lines shimmer; pick shape and palette under the source list, or leave both on Auto to change with the music), Ink bloom (ink-in-water strands that burst on kicks, turn with the mids and drift with loud passages; pick its ink and paper colours under the source list), Woven ribbons, Sliced weave and Mirrored chevrons (op-art weaves whose rows slide on the beat), Disorder grid (after Vera Molnár / Georg Nees), Random walk (after Frieder Nake), Oscillons (your track as an oscilloscope figure, after Ben Laposky), Harmonic dots (after John Whitney), Cube studies (after Manfred Mohr), Chance collage and Cut-up strips (built from your own images and clips, after Arp, Höch and Burroughs), Rotoreliefs (after Duchamp), Rule drawing (after Sol LeWitt), Squares &amp; stripes (after Albers, Stella and Agnes Martin) and Event score (your own words, after Fluxus). They're remembered between sessions.</p>
       <p><b>Scenes</b> store every setting in sections 3 and 4 (mappings, cuts, blend, crossfade, beat sensitivity). They're kept in this browser; use Export to save them to a file you can back up, share or Import on another computer. Each scene gets a button under Live performance that you can map to a MIDI pad.</p>
       <p>Everything runs on your computer; files never leave it.</p>
     </details>
@@ -3425,6 +3428,8 @@ const GENS = {
   'Woven ribbons': { credit:'op-art weave', make(){ return ribbonGen('soft'); }},
   'Sliced weave': { credit:'op-art weave, glitched', make(){ return ribbonGen('slice'); }},
   'Mirrored chevrons': { credit:'op-art weave, mirrored', make(){ return chevronGen(); }},
+  'Ink bloom': { credit:'ink in water, particle flow', make(){ return inkGen(); }},
+  'Moiré orbs': { credit:'fine-line gradient shapes', make(){ return orbGen(); }},
 };
 /* ---- op-art ribbons: shared helpers ---- */
 function palMix(P,v){ v=((v%1)+1)%1*P.length; const i=Math.floor(v), f=v-i, a=P[i], b=P[(i+1)%P.length], e=f*f*(3-2*f);
@@ -3488,6 +3493,115 @@ function chevronGen(){
     const ky=h*(.45+.08*Math.sin(ph)), rg=g.createRadialGradient(half,ky,0,half,ky,w*.22*(1+A.bass*.4));
     rg.addColorStop(0,'rgba(8,16,10,.75)'); rg.addColorStop(1,'rgba(8,16,10,0)'); g.fillStyle=rg; g.fillRect(0,0,w,h);
   }}; }
+/* ---- ink bloom: thousands of particles swirl out of a wandering core and leave thin fading trails ---- */
+const INK_DEF={c1:'#121212', c2:'#3b4566', bg:'#f5f4f0'};
+function inkCols(){ const k=S.ink||INK_DEF; return {c1:k.c1||INK_DEF.c1, c2:k.c2||INK_DEF.c2, bg:k.bg||INK_DEF.bg}; }
+function hexA(hx,a){ const n=parseInt(hx.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; }
+function inkGen(){
+  let P=null, N=0, cx=.5, cy=.5, wa=0, swirl=0, lastBg='', wind=[0,0];
+  return { draw(g,w,h,c){
+    const A=c.A, K=inkCols(), M=Math.min(w,h);
+    if (!P || lastBg!==K.bg){ N=Math.round((matchMedia('(pointer:coarse)').matches?1700:2600)*Math.min(1.6,w*h/(1280*720))); P=new Float32Array(N*5); g.fillStyle=K.bg; g.fillRect(0,0,w,h); lastBg=K.bg;
+      for (let i=0;i<N;i++) spawn(i,c,.4); }
+    function spawn(i,c,burst){ const a=c.rnd()*6.2832, r=c.rnd()*c.rnd()*M*.035, sp=(1+c.rnd()*3)*burst*M*.0025;
+      P[i*5]=cx*w+Math.cos(a)*r; P[i*5+1]=cy*h+Math.sin(a)*r; P[i*5+2]=Math.cos(a)*sp; P[i*5+3]=Math.sin(a)*sp; P[i*5+4]=c.rnd()*.4; }
+    // fade old strands toward the paper
+    g.fillStyle=hexA(K.bg, .09+A.level*.04); g.fillRect(0,0,w,h);
+    // the core wanders; loud passages blow it sideways
+    wa+=c.dt*(.15+A.mid*.6); swirl+=c.dt*(.3+A.mid*1.2)*(.5+c.speed);
+    cx+=(.5+Math.sin(wa*.7)*.18-cx)*c.dt*.5; cy+=(.5+Math.cos(wa*.53)*.16-cy)*c.dt*.5;
+    const wd=wa*.4; wind[0]+=(Math.cos(wd)*A.level*1.6-wind[0])*c.dt; wind[1]+=(Math.sin(wd)*A.level*.8-wind[1])*c.dt;
+    if (c.beat||c.onset){ const k=Math.floor(N*(c.beat?.18:.07)*(.5+A.bass)); for (let j=0;j<k;j++) spawn(Math.floor(c.rnd()*N),c,1.6+A.bass*2); }
+    const sc=8.5/M, fs=M*.0016*(.6+A.level*1.2+c.speed), st=c.dt*60, paths=[new Path2D(),new Path2D(),new Path2D()];
+    for (let i=0;i<N;i++){ const o=i*5; let x=P[o], y=P[o+1], vx=P[o+2], vy=P[o+3];
+      const dx=x-cx*w, dy=y-cy*h, d=Math.hypot(dx,dy)+1;
+      // swirling current: layered sines (curl-like) + rotation around the core + a little outward push
+      const nx=x*sc, ny=y*sc, ang=Math.sin(nx+swirl*.7)*2.2+Math.cos(ny*1.3-swirl*.5)*2.2+Math.sin((nx-ny)*2.1+swirl*1.3)*1.4+(P[o+4]*9+i%7)*.6;
+      vx=vx*.9+(Math.cos(ang)*fs*1.8+(-dy/d)*fs*.25*Math.sin(swirl*.3)+dx/d*fs*.12+wind[0]*fs)*.12*st;
+      vy=vy*.9+(Math.sin(ang)*fs*1.8+(dx/d)*fs*.25*Math.sin(swirl*.3)+dy/d*fs*.12+wind[1]*fs)*.12*st;
+      const x2=x+vx*st, y2=y+vy*st, life=P[o+4]+c.dt*(.22+c.rnd()*.35);
+      const pi=d<M*(.02+.06*((i*.618)%1))?2:(i&1); paths[pi].moveTo(x,y); paths[pi].lineTo(x2,y2);
+      if (life>1 || x2<-20||x2>w+20||y2<-20||y2>h+20) spawn(i,c,.3+A.level); else { P[o]=x2; P[o+1]=y2; P[o+2]=vx; P[o+3]=vy; P[o+4]=life; } }
+    g.lineWidth=Math.max(.6,M/1300); g.lineCap='round';
+    g.strokeStyle=hexA(K.c1,.38); g.stroke(paths[0]); g.strokeStyle=hexA(K.c2,.38); g.stroke(paths[1]); g.lineWidth*=1.8; g.strokeStyle=hexA(K.c1,.6); g.stroke(paths[2]);
+    // dense knot at the core
+  }}; }
+(function(){
+  const set=()=>{ const k=inkCols(); $('inkC1').value=k.c1; $('inkC2').value=k.c2; $('inkBg').value=k.bg; };
+  set(); const upd=()=>{ S.ink={c1:$('inkC1').value, c2:$('inkC2').value, bg:$('inkBg').value}; save(); };
+  ['inkC1','inkC2','inkBg'].forEach(id=>$(id).addEventListener('input',upd));
+  $('inkReset').onclick=()=>{ S.ink=Object.assign({},INK_DEF); save(); set(); };
+})();
+/* ---- moiré orbs: glowing gradient shapes built from very fine lines; bass swells, mids ripple, highs shimmer ---- */
+const ORB_PALS={
+  'Coral':     ['#cfd0d6','#ff6a1f','#ff2fa0','#a12bff'],
+  'Mint on red':['#e8321e','#ffffff','#9ff7e0','#5a6bff'],
+  'Navy dusk': ['#141b4d','#ff7a1a','#ff4f9a','#2b2470'],
+  'Bubblegum': ['#e8418a','#f2e14a','#ffc0dc','#ff6a2a'],
+  'Sunset':    ['#d9c9c9','#ff6a1a','#ff2fae','#6a2bff'],
+  'Lilac lime':['#d4cfdc','#c8e04a','#ffffff','#8a5cff'],
+  'Blue fire': ['#1d4fa8','#ff5a1f','#ff8a3a','#1d6a3a'],
+};
+const ORB_SHAPES=['sphere','ribbed','wavy','bubbles','horizon','tunnel'];
+function hx(h){ const n=parseInt(h.slice(1),16); return [n>>16&255,n>>8&255,n&255]; }
+function mixc(a,b,t){ a=hx(a); b=hx(b); return `rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`; }
+function orbGen(){
+  let beats=0, shapeI=0, palI=0, palT=1, palFrom=null, R=0, wob=0, ph=0, bub=null;
+  return { draw(g,w,h,c){
+    const A=c.A, M=Math.min(w,h), set=S.orb||{shape:'auto',pal:'auto'}, names=Object.keys(ORB_PALS);
+    if (c.beat){ beats++; if (set.shape==='auto' && beats%16===0) shapeI=(shapeI+1+Math.floor(c.rnd()*(ORB_SHAPES.length-1)))%ORB_SHAPES.length;
+      if (set.pal==='auto' && beats%8===0){ palFrom=curPal(); palI=(palI+1)%names.length; palT=0; } }
+    const shape=set.shape==='auto'?ORB_SHAPES[shapeI]:set.shape;
+    palT=Math.min(1,palT+c.dt*1.5);
+    function curPal(){ const tgt=ORB_PALS[set.pal!=='auto'&&ORB_PALS[set.pal]?set.pal:names[palI]]; if (!palFrom||palT>=1) return tgt; return tgt.map((x,i)=>{ const a=hx(palFrom[i]), b=hx(x), e=palT*palT*(3-2*palT); return '#'+a.map((v,k)=>Math.round(v+(b[k]-v)*e).toString(16).padStart(2,'0')).join(''); }); }
+    const P=curPal();
+    R+=(M*(.3+A.bass*.09+A.level*.04)-R)*Math.min(1,c.dt*8); wob+=(A.mid-wob)*Math.min(1,c.dt*4); ph+=c.dt*(.4+A.level)*(.5+c.speed);
+    const cx=w/2+Math.sin(ph*.3)*M*.02, cy=h/2+Math.cos(ph*.23)*M*.02;
+    g.fillStyle=P[0]; g.fillRect(0,0,w,h);
+    // outline of the current shape
+    const path=new Path2D();
+    if (shape==='sphere'){ path.arc(cx,cy,R,0,6.2832); }
+    else if (shape==='wavy'){ for (let i=0;i<=120;i++){ const a=i/120*6.2832, r=R*(1+(.1+wob*.12)*Math.sin(3*a+ph)+(.05+wob*.08)*Math.sin(5*a-ph*1.3));
+      const x=cx+Math.cos(a)*r*1.12, y=cy+Math.sin(a)*r*.95; i?path.lineTo(x,y):path.moveTo(x,y); } path.closePath(); }
+    else if (shape==='ribbed'){ const H=R*1.15, ribs=5; for (let i=0;i<=80;i++){ const y=-H+2*H*i/80, base=Math.sqrt(Math.max(0,1-(y/H)**2)), rib=1+(.07+wob*.08)*Math.abs(Math.sin((y/H+1)*ribs*Math.PI/2+ph*.5));
+      const x=cx+R*1.05*Math.pow(base,.6)*rib; i?path.lineTo(x,cy+y):path.moveTo(x,cy+y); }
+      for (let i=80;i>=0;i--){ const y=-H+2*H*i/80, base=Math.sqrt(Math.max(0,1-(y/H)**2)), rib=1+(.07+wob*.08)*Math.abs(Math.sin((y/H+1)*ribs*Math.PI/2+ph*.5)); path.lineTo(cx-R*1.05*Math.pow(base,.6)*rib,cy+y); } path.closePath(); }
+    else if (shape==='horizon'){ const bh=R*(.35+wob*.2+A.bass*.2); g.save(); g.translate(cx,cy); g.scale(1,bh/(w*.7));
+      const rg=g.createRadialGradient(0,0,0,0,0,w*.7); rg.addColorStop(0,P[1]); rg.addColorStop(.35,P[2]); rg.addColorStop(.75,hexA(P[3],.5)); rg.addColorStop(1,hexA(P[3],0)); g.fillStyle=rg; g.fillRect(-w,-w*.7,w*2,w*1.4); g.restore();
+      const ln=new Path2D(), sp=Math.max(2.2,M/380); for (let y=0;y<h;y+=sp){ ln.moveTo(0,y); for (let x=0;x<=w;x+=M/40) ln.lineTo(x,y+Math.sin(x*.012+y*.004+ph)*sp*(1+A.high*4)*Math.exp(-Math.pow((y-cy)/(bh*2),2))); }
+      g.strokeStyle=hexA(P[0],.35); g.lineWidth=Math.max(.6,sp*.35); g.stroke(ln); return; }
+    else if (shape==='bubbles'){ if (!bub) bub=[[.2,.18,.55],[.78,.15,.6],[.5,.45,.62],[.15,.7,.5],[.82,.68,.58],[.45,.9,.5]]; }
+    if (shape==='tunnel'){
+      // spiral of fine rays into a vanishing point
+      const vx=cx+Math.sin(ph*.4)*M*.08, vy=cy-M*.12, n=180, D=Math.hypot(w,h);
+      for (let k=0;k<2;k++){ const pa=new Path2D(); for (let i=k;i<n;i+=2){ const a=i/n*6.2832+ph*.2, tw=.6+wob*.6;
+        pa.moveTo(vx,vy); for (let s=1;s<=10;s++){ const r=s/10*D, aa=a+Math.sin(r/D*4-ph)*.12*tw; pa.lineTo(vx+Math.cos(aa)*r,vy+Math.sin(aa)*r); } }
+        g.strokeStyle=k?P[1]:P[3]; g.lineWidth=Math.max(1.5,M/110)*(1+A.high*.6); g.stroke(pa); }
+      const rg=g.createRadialGradient(vx,vy,0,vx,vy,M*.5); rg.addColorStop(0,P[3]); rg.addColorStop(.25,hexA(P[3],.6)); rg.addColorStop(1,hexA(P[3],0)); g.fillStyle=rg; g.fillRect(0,0,w,h);
+      g.fillStyle=P[1]; g.beginPath(); g.arc(vx,vy,M*.012*(1+A.bass*2),0,6.2832); g.fill(); return; }
+    const blobs = shape==='bubbles' ? bub.map((b,i)=>{ const p=new Path2D(); const r=R*b[2]*(1+A.bass*.25*((i%2)?1:.5)); p.arc(w*(.15+.7*b[0])+Math.sin(ph*.5+i)*M*.03, h*(.12+.76*b[1])+Math.cos(ph*.4+i*2)*M*.03, r,0,6.2832); return [p,r,w*(.15+.7*b[0])+Math.sin(ph*.5+i)*M*.03,h*(.12+.76*b[1])+Math.cos(ph*.4+i*2)*M*.03]; }) : [[path,R,cx,cy]];
+    for (const [pa,rr,bx,by] of blobs){
+      // glow + body: radial gradient from an off-centre highlight to the rim colour
+      const bb=shape==='bubbles'?null:1; g.save();
+      g.shadowColor=hexA(P[3],.8); g.shadowBlur=M*.05*(1+A.level);
+      const hxp=bx-rr*.25, hyp=by-rr*.35, gr=g.createRadialGradient(hxp,hyp,rr*.05,bx,by,rr*1.25);
+      gr.addColorStop(0,P[3]); gr.addColorStop(.45,P[2]); gr.addColorStop(.85,P[1]); gr.addColorStop(1,P[1]);
+      if (shape==='bubbles'){ const b=new Path2D(pa); g.fillStyle=P[2]; } g.fillStyle=gr; g.fill(pa); g.restore();
+      // fine lines across the body: they beat against each other (moiré) and shimmer with the highs
+      g.save(); g.clip(pa); const sp=Math.max(2.2,M/380), amp=sp*(1.5+A.high*6), f=6.2832/(M*(.05+wob*.03));
+      for (let k=0;k<2;k++){ const ln=new Path2D(); for (let y=by-rr*1.4+k*sp/2;y<by+rr*1.4;y+=sp*1.02){ const yy=y-by;
+          for (let x=cx-w*.8;x<=cx+w*.8;x+=M/48){ const v=y+Math.sin(x*f+yy*.02+ph*(k?1.3:-1))*amp*(1-Math.abs(yy)/(rr*1.6)); x===cx-w*.8?ln.moveTo(x,v):ln.lineTo(x,v); } }
+        g.strokeStyle=k?hexA('#ffffff',.22+A.high*.25):hexA(P[3],.35); g.lineWidth=Math.max(.6,sp*.35); g.stroke(ln); }
+      // rim light
+      g.strokeStyle=P[1]; g.lineWidth=M*.012; g.globalAlpha=.65; g.stroke(pa); g.restore();
+    }
+  }}; }
+(function(){
+  const ps=$('orbPal'); ps.innerHTML='<option value="auto">Auto (changes every 2 bars)</option>'+Object.keys(ORB_PALS).map(n=>`<option>${n}</option>`).join('');
+  const o=S.orb||{shape:'auto',pal:'auto'}; $('orbShape').value=o.shape; ps.value=o.pal;
+  const upd=()=>{ S.orb={shape:$('orbShape').value, pal:ps.value}; save(); };
+  $('orbShape').onchange=upd; ps.onchange=upd;
+})();
 const DEFAULT_WORDS=['listen','wait for the drop','count the beats until silence','turn toward the loudest sound','draw one line','repeat','stand still for one bar','erase everything','now','this is a score'].join('\n');
 function addGen(name){
   const G=GENS[name]; if (!G) return;
