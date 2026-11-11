@@ -5302,8 +5302,18 @@ const lsget=(k,d)=>{ try{ const v=localStorage.getItem(k); return v===null?d:v; 
 const lsset=(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
 const app=$('app'), stage=$('stage');
 
-// iPhone: let web audio play even when the ring/silent switch is on (Safari 16.4+ engines)
-try{ if (navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+// iPhone: let web audio play even when the ring/silent switch is on (newer WebKit).
+// 'playback' blocks the microphone (getUserMedia fails with InvalidStateError), so switch to
+// 'play-and-record' while a mic stream is open and back to 'playback' once every mic track is stopped.
+(function(){ const AS=navigator.audioSession; if (!AS) return;
+  try{ AS.type='playback'; }catch(e){}
+  const md=navigator.mediaDevices; if (!md||!md.getUserMedia) return;
+  const live=new Set(), done=t=>{ if (live.delete(t) && !live.size) setTimeout(()=>{ if (!live.size) try{ AS.type='playback'; }catch(e){} },300); };
+  const gum=md.getUserMedia.bind(md);
+  md.getUserMedia=async c=>{ const wantsMic=!!(c&&c.audio); if (wantsMic) try{ AS.type='play-and-record'; }catch(e){}
+    try{ const s=await gum(c); for (const t of s.getAudioTracks()){ live.add(t); t.addEventListener('ended',()=>done(t)); const st=t.stop.bind(t); t.stop=()=>{ st(); done(t); }; } if (wantsMic&&!s.getAudioTracks().length) done(null); return s; }
+    catch(e){ if (wantsMic && !live.size) try{ AS.type='playback'; }catch(_){} throw e; } };
+})();
 
 // tab bar to the bottom of the screen
 const tabs=document.querySelector('.tabs'); document.body.appendChild(tabs);
