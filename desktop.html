@@ -239,7 +239,7 @@ button.on{border-color:var(--accent);color:var(--accent)}
     </div>
     <div class="sec mod" data-mod="smp">
       <div class="modhead"><label><input data-k="smp.on" type="checkbox"> Sampler</label><span class="sub">your audio, cut at its hits, played by the picture</span></div>
-      <div class="row"><label class="btn primary">Load audio<input id="as-smpFile" type="file" accept="audio/*,video/*,.mp3,.m4a,.aac,.wav,.aif,.aiff,.caf,.flac,.ogg,.opus,.mp4,.mov"></label><span id="as-smpName" class="small" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No audio loaded</span></div>
+      <div class="row"><label class="btn primary">Load audio<input id="as-smpFile" type="file" accept="audio/*,video/*,.mp3,.m4a,.aac,.wav,.aif,.aiff,.caf,.flac,.ogg,.opus,.mp4,.mov"></label><button id="as-smpRec" title="Record from the microphone, then it gets sliced like a loaded file">● Record</button><span id="as-smpName" class="small" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No audio loaded</span></div>
       <canvas id="as-smpWave" width="600" height="90" title="Tap a slice to hear it" style="width:100%;height:64px;display:block;background:#0f1115;border:1px solid var(--line);border-radius:5px;cursor:pointer"></canvas>
       <div class="fxgrid">
         <label>Slice sensitivity<input data-k="smp.sens" type="range" min="0" max="1" step="0.01"></label>
@@ -286,7 +286,7 @@ button.on{border-color:var(--accent);color:var(--accent)}
       <p>In this app the synth's "picture" is normally the visuals output itself (see the Loop tab), so what you hear changes what you see, which changes what you hear. You can also load an image or video, or turn on the webcam, and mix it in. A scan line sweeps across the picture in time with the tempo, like a playhead over a graphic score.</p>
       <p><b>Image score</b>: each step of the scan, the brightest spots in that slice of the picture become notes. Higher in the frame is higher in pitch, and everything is kept in your key and scale. <b>Pad</b> holds chords that change each bar, picked from the picture's colour (or where the light sits). <b>Spectral scanner</b> plays the whole scan line at once as a spectrum, the way early optical synths read drawn sound. <b>Drums</b> come from texture along the scan line (bottom of the frame → kick, middle → snare, top → hats) and from movement: wave at the webcam to play hits. <b>Texture</b> is filtered noise that follows the detail in the picture.</p>
       <p>Each mapping picks one picture feature: <b>brightness</b>, <b>darkness</b>, <b>contrast</b>, <b>colour</b> (saturation), <b>hue</b>, <b>red / green / blue</b>, <b>detail</b> (edges), <b>motion</b>, where the light is (<b>light X / Y</b>), where the movement is (<b>motion X / Y</b>), the brightness under the <b>scan line</b>, or a slow LFO. <i>Base</i> is the resting value, <i>amount</i> is how far the picture pushes it (left of centre pushes the other way).</p>
-      <p><b>Sampler</b>: load any audio (a loop, a beat, a field recording) and it is cut at its hits, like a beat-slicing sampler. Slice sensitivity and Max slices set how many pieces you get; tap the waveform to hear a slice. Then the picture plays them: <i>Motion pads</i> splits the frame into a grid and movement in a square fires its slice (great with the camera); <i>Scan line</i> plays the slice picked by the brightest spot as the line sweeps; <i>Movement hits</i> fires on sudden movement, left-to-right picks the slice; <i>In order</i> plays the slices back on the beat, and movement makes it stutter. Snap to the beat keeps it in time. The audio file is not saved with scenes: load it again next time. MIDI: slices go out on channel 11 from note 36.</p>
+      <p><b>Sampler</b>: load any audio (a loop, a beat, a field recording), or tap <i>● Record</i> to capture a take from your microphone (tap Stop when done; silence at the ends is trimmed), and it is cut at its hits, like a beat-slicing sampler. Slice sensitivity and Max slices set how many pieces you get; tap the waveform to hear a slice. Then the picture plays them: <i>Motion pads</i> splits the frame into a grid and movement in a square fires its slice (great with the camera); <i>Scan line</i> plays the slice picked by the brightest spot as the line sweeps; <i>Movement hits</i> fires on sudden movement, left-to-right picks the slice; <i>In order</i> plays the slices back on the beat, and movement makes it stutter. Snap to the beat keeps it in time. The audio file is not saved with scenes: load it again next time. MIDI: slices go out on channel 11 from note 36.</p>
       <p><b>Scenes</b> store every sound setting. They're kept in this browser; Export saves them to a file you can back up or Import elsewhere.</p>
       <p>Shortcuts are listed in the Loop tab.</p>
       <p>Everything runs on your computer; files and the camera never leave it.</p>
@@ -4694,10 +4694,60 @@ function smpStep(i,col,n,t){
     let idx=smpSeq%ns; if (F.motion>.45 && Math.random()<F.motion*V['smp.touch']) idx=Math.max(0,SMP.last); else smpSeq++;    // movement repeats (stutter)
     smpPlay(idx,t,clamp(.4+c.Ln*.6),0); hit(col,n,0,1,t,.2,'#b48cff',true); }
 }
+/* record a take from the microphone straight into the sampler (raw PCM, so it works the same on iPhone and desktop) */
+const SREC={on:false, stream:null, src:null, proc:null, sink:null, L:[], R:[], len:0, t0:0, timer:null};
+async function smpRecStart(){
+  if (!A) A=buildAudio(); try{ await A.ctx.resume(); }catch(e){}
+  try{ SREC.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}}); }
+  catch(e){ $('smpName').textContent='No microphone: allow mic access for this page and try again.'; return; }
+  const ctx=A.ctx; SREC.src=ctx.createMediaStreamSource(SREC.stream); SREC.proc=ctx.createScriptProcessor(4096,2,2); SREC.sink=ctx.createGain(); SREC.sink.gain.value=0;
+  SREC.L=[]; SREC.R=[]; SREC.len=0; SREC.pk=0; SREC.on=true; SREC.t0=performance.now();
+  SREC.proc.onaudioprocess=e=>{ if (!SREC.on) return; const ib=e.inputBuffer, a=ib.getChannelData(0), b=ib.numberOfChannels>1?ib.getChannelData(1):a;
+    for (let i=0;i<a.length;i+=16){ const v=Math.abs(a[i]); if (v>SREC.pk) SREC.pk=v; } SREC.L.push(new Float32Array(a)); SREC.R.push(new Float32Array(b)); SREC.len+=a.length; if (SREC.len>ctx.sampleRate*60) smpRecStop(); };
+  SREC.src.connect(SREC.proc); SREC.proc.connect(SREC.sink); SREC.sink.connect(ctx.destination);   // silent: the mic is never heard through the speakers
+  $('smpRec').textContent='■ Stop'; $('smpRec').classList.add('rec');
+  SREC.timer=setInterval(smpRecDraw,80);
+}
+function smpRecDraw(){
+  const cv=$('smpWave'); if (!cv||!SREC.on) return; const g=cv.getContext('2d'), w=cv.width, h=cv.height, secs=(performance.now()-SREC.t0)/1000;
+  g.fillStyle='#160d12'; g.fillRect(0,0,w,h);
+  // rolling picture of the last few seconds of the take
+  const sr=A.ctx.sampleRate, span=Math.max(4,secs), per=Math.max(1,Math.floor(span*sr/w)); let col=0, x=0, mx=0, peak=0;
+  g.fillStyle='#ff5f6d';
+  for (const ch of SREC.L){ for (let i=0;i<ch.length;i++){ const v=Math.abs(ch[i]); if (v>mx) mx=v; if (++col>=per){ const hh=Math.min(1,mx*1.6)*h*.45; g.fillRect(x,h/2-hh,1,hh*2+1); peak=mx; mx=0; col=0; x++; } } }
+  g.fillStyle='#fff'; g.font='13px system-ui'; g.fillText('● Recording '+secs.toFixed(1)+' s  (tap Stop when done, max 60 s)',10,16);
+  $('smpName').textContent='Recording… '+secs.toFixed(1)+' s'+(SREC.pk<.01&&secs>1.5?' · no sound yet: check the mic':'');
+}
+function smpRecStop(){
+  if (!SREC.on) return; SREC.on=false; clearInterval(SREC.timer);
+  try{ SREC.src.disconnect(); SREC.proc.disconnect(); SREC.sink.disconnect(); }catch(e){}
+  if (SREC.stream) SREC.stream.getTracks().forEach(t=>t.stop());
+  $('smpRec').textContent='● Record'; $('smpRec').classList.remove('rec');
+  const sr=A.ctx.sampleRate; let n=SREC.len; if (n<sr*.2){ $('smpName').textContent='Too short: hold Record a little longer.'; smpWave(); return; }
+  const join=arr=>{ const o=new Float32Array(n); let k=0; for (const c of arr){ o.set(c.subarray(0,Math.min(c.length,n-k)),k); k+=c.length; if (k>=n) break; } return o; };
+  let L=join(SREC.L), R=join(SREC.R);
+  // trim the silence before the first sound and after the last, and bring the level up
+  let pk=0; for (let i=0;i<n;i++){ const v=Math.max(Math.abs(L[i]),Math.abs(R[i])); if (v>pk) pk=v; }
+  const th=Math.max(.004,pk*.04); let a=0, b=n-1; while (a<n&&Math.abs(L[a])<th&&Math.abs(R[a])<th) a++; while (b>a&&Math.abs(L[b])<th&&Math.abs(R[b])<th) b--;
+  a=Math.max(0,a-Math.round(sr*.01)); b=Math.min(n-1,b+Math.round(sr*.15)); if (b-a<sr*.1){ a=0; b=n-1; }
+  const m=b-a+1, gain=pk>0?Math.min(8,.9/pk):1, buf=new AudioBuffer({length:m,numberOfChannels:2,sampleRate:sr});
+  const dl=buf.getChannelData(0), dr=buf.getChannelData(1); for (let i=0;i<m;i++){ dl[i]=L[a+i]*gain; dr[i]=R[a+i]*gain; }
+  SREC.L=[]; SREC.R=[];
+  const d=new Date(), nm='Mic take '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+  smpUseBuffer(buf,nm);
+}
+function smpUseBuffer(buf,name){
+  SMP.buf=buf; SMP.name=name;
+  const ch=buf.numberOfChannels, n=buf.length, rv=new AudioBuffer({length:n,numberOfChannels:ch,sampleRate:buf.sampleRate});
+  for (let c=0;c<ch;c++){ const s=buf.getChannelData(c), d=rv.getChannelData(c); for (let i=0;i<n;i++) d[i]=s[n-1-i]; }
+  SMP.rev=rv; smpAnalyse(); smpSlice();
+  if (!S.p['smp.on']){ S.p['smp.on']=true; syncUI(); save(); }
+}
+$('smpRec').onclick=()=>{ SREC.on?smpRecStop():smpRecStart(); };
 $('smpFile').onchange=e=>{ smpLoad(e.target.files[0]); e.target.value=''; };
 $('smpWave').onclick=e=>{ if (!SMP.buf) return; const r=e.currentTarget.getBoundingClientRect(), tt=(e.clientX-r.left)/r.width*SMP.dur; let idx=0; for (let i=0;i<SMP.on.length;i++) if (SMP.on[i]<=tt) idx=i;
   if (!A) A=buildAudio(); A.ctx.resume(); if (!running) A.bus.smp.gain.value=V['smp.level']; smpPlay(idx,A.ctx.currentTime+.02,.9,0); };
-setInterval(()=>{ if (SMP.buf && performance.now()-SMP.lastT<400) smpWave(); },120);
+setInterval(()=>{ if (SMP.buf && !SREC.on && performance.now()-SMP.lastT<400) smpWave(); },120);
 smpWave();
 /* ============================================================
    Keyboard
