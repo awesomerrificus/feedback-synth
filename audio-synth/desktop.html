@@ -955,12 +955,65 @@ const SMP_SLOTS=['smp','smp2','smp3'];
 function makeSampler(P,SI){
 const COL=['#b48cff','#ffb347','#5fe0ff'][SI], za=new Float32Array(16), zt=new Float64Array(16);
 const SMP={buf:null, rev:null, name:'', on:[], strength:[], cur:null, last:-1, lastT:0, curEnd:0};
+// Decode the sound of a file. decodeAudioData first; for MP4/MOV clips it can refuse (iPhone camera clips),
+// so then pull the AAC track out of the container and decode it with WebCodecs AudioDecoder.
+async function smpDecodeAny(ctx, ab, maxSec){
+  const dec=b=>new Promise((res,rej)=>{ const p=ctx.decodeAudioData(b,res,rej); if (p&&p.then) p.then(res,rej); });
+  try{ return await dec(ab.slice(0)); }catch(e){}
+  try{ return await smpDecodeAny_mp4(ctx, ab, maxSec||60); }catch(e){ console.warn('demux',e); }
+  try{ const c=new Uint8Array(ab.slice(0)); if (String.fromCharCode(c[4],c[5],c[6],c[7])==='ftyp'){ c.set([105,115,111,109],8); return await dec(c.buffer); } }catch(e){}
+  return null;
+}
+async function smpDecodeAny_mp4(ctx, ab, maxSec){
+  if (typeof AudioDecoder==='undefined') throw new Error('no AudioDecoder');
+  const u=new Uint8Array(ab), dv=new DataView(ab), N=u.length;
+  const fc=o=>String.fromCharCode(u[o],u[o+1],u[o+2],u[o+3]);
+  const boxes=(s,e)=>{ const out=[]; let o=s; while (o+8<=e){ let sz=dv.getUint32(o), h=8; const t=fc(o+4);
+      if (sz===1){ sz=Number(dv.getBigUint64(o+8)); h=16; } else if (sz===0) sz=e-o; if (sz<h||o+sz>e) break; out.push({t,s:o+h,e:o+sz}); o+=sz; } return out; };
+  const kid=(b,t)=>boxes(b.s,b.e).find(x=>x.t===t);
+  const moov=boxes(0,N).find(b=>b.t==='moov'); if (!moov) throw new Error('no moov');
+  for (const trak of boxes(moov.s,moov.e).filter(b=>b.t==='trak')){
+    const mdia=kid(trak,'mdia'); if (!mdia) continue; const hdlr=kid(mdia,'hdlr'); if (!hdlr||fc(hdlr.s+8)!=='soun') continue;
+    const stbl=kid(kid(mdia,'minf'),'stbl'), stsd=kid(stbl,'stsd');
+    // find esds anywhere inside the sample description (QuickTime may wrap it in 'wave')
+    let es=-1; for (let o=stsd.s;o<stsd.e-4;o++) if (u[o]===101&&u[o+1]===115&&u[o+2]===100&&u[o+3]===115){ es=o+4; break; }
+    if (es<0) throw new Error('no esds');
+    let o=es+4; const len=()=>{ let l=0,b; do{ b=u[o++]; l=(l<<7)|(b&127); }while(b&128); return l; };
+    let asc=null; while (o<stsd.e){ const tag=u[o++], l=len();
+      if (tag===3){ o+=2; const f=u[o++]; if (f&128) o+=2; if (f&64) o+=1+u[o]; if (f&32) o+=2; }
+      else if (tag===4){ o+=13; } else if (tag===5){ asc=u.slice(o,o+l); break; } else o+=l; }
+    if (!asc) throw new Error('no asc');
+    let aot=asc[0]>>3, fi=((asc[0]&7)<<1)|(asc[1]>>7), cc=(asc[1]>>3)&15;
+    const RATES=[96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350];
+    let sr=RATES[fi]; if (aot===31||fi===15) throw new Error('rare asc');
+    const sz=kid(stbl,'stsz'), co=kid(stbl,'stco')||kid(stbl,'co64'), sc=kid(stbl,'stsc'); const big=co.t==='co64';
+    const fixed=dv.getUint32(sz.s+4), ns=dv.getUint32(sz.s+8), sizes=[]; for (let i=0;i<ns;i++) sizes.push(fixed||dv.getUint32(sz.s+12+i*4));
+    const nc=dv.getUint32(co.s+4), offs=[]; for (let i=0;i<nc;i++) offs.push(big?Number(dv.getBigUint64(co.s+8+i*8)):dv.getUint32(co.s+8+i*4));
+    const ne=dv.getUint32(sc.s+4), ent=[]; for (let i=0;i<ne;i++) ent.push([dv.getUint32(sc.s+8+i*12),dv.getUint32(sc.s+12+i*12)]);
+    const maxS=Math.ceil(maxSec*sr/1024)+4, samp=[]; let si=0;
+    for (let c=0;c<nc&&si<ns&&samp.length<maxS;c++){ let per=0; for (const [f,p] of ent) if (f<=c+1) per=p; let p=offs[c];
+      for (let k=0;k<per&&si<ns;k++){ samp.push([p,sizes[si]]); p+=sizes[si]; si++; } }
+    const chans=cc||2, parts=[]; let err=null;
+    const ad=new AudioDecoder({output:d=>{ const n=d.numberOfFrames, ch=d.numberOfChannels, pl=[];
+        try{ for (let c=0;c<ch;c++){ const a=new Float32Array(n); d.copyTo(a,{planeIndex:c,format:'f32-planar'}); pl.push(a); } }
+        catch(e){ const a=new Float32Array(n*ch); d.copyTo(a,{planeIndex:0,format:'f32'}); pl.length=0; for (let c=0;c<ch;c++){ const b=new Float32Array(n); for (let i=0;i<n;i++) b[i]=a[i*ch+c]; pl.push(b); } }
+        if (d.sampleRate) sr=d.sampleRate; parts.push(pl); d.close(); }, error:e=>{ err=e; }});
+    ad.configure({codec:'mp4a.40.'+(aot||2), sampleRate:sr, numberOfChannels:chans, description:asc});
+    samp.forEach(([p,l],i)=>{ if (p+l<=N) ad.decode(new EncodedAudioChunk({type:'key', timestamp:Math.round(i*1024/sr*1e6), data:u.subarray(p,p+l)})); });
+    await ad.flush(); ad.close(); if (err||!parts.length) throw err||new Error('no audio');
+    const ch=Math.min(2,parts[0].length), total=parts.reduce((s,p)=>s+p[0].length,0);
+    const buf=new AudioBuffer({length:total,numberOfChannels:ch,sampleRate:sr});
+    for (let c=0;c<ch;c++){ const d=buf.getChannelData(c); let o2=0; for (const p of parts){ d.set(p[c]||p[0],o2); o2+=p[0].length; } }
+    return buf;
+  }
+  throw new Error('no sound track');
+}
 async function smpLoad(file){
   if (!file) return; $(P+'Name').textContent='Reading '+file.name+'…';
   try{
     const ab=await file.arrayBuffer();
     const dc=A?A.ctx:new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(2,44100,44100);
-    const buf=await new Promise((res,rej)=>{ const p=dc.decodeAudioData(ab,res,rej); if (p&&p.then) p.then(res,rej); });
+    const buf=await smpDecodeAny(dc, ab, 60); if (!buf) throw new Error('decode');
     SMP.buf=buf; SMP.name=file.name;
     const ch=buf.numberOfChannels, n=buf.length, rv=new AudioBuffer({length:n,numberOfChannels:ch,sampleRate:buf.sampleRate});
     for (let c=0;c<ch;c++){ const s=buf.getChannelData(c), d=rv.getChannelData(c); for (let i=0;i<n;i++) d[i]=s[n-1-i]; }
