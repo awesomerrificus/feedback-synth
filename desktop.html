@@ -237,6 +237,20 @@ button.on{border-color:var(--accent);color:var(--accent)}
       </div>
       <div class="maps"></div>
     </div>
+    <div class="sec mod" data-mod="smp">
+      <div class="modhead"><label><input data-k="smp.on" type="checkbox"> Sampler</label><span class="sub">your audio, cut at its hits, played by the picture</span></div>
+      <div class="row"><label class="btn primary">Load audio<input id="as-smpFile" type="file" accept="audio/*,video/*,.mp3,.m4a,.aac,.wav,.aif,.aiff,.caf,.flac,.ogg,.opus,.mp4,.mov"></label><span id="as-smpName" class="small" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No audio loaded</span></div>
+      <canvas id="as-smpWave" width="600" height="90" title="Tap a slice to hear it" style="width:100%;height:64px;display:block;background:#0f1115;border:1px solid var(--line);border-radius:5px;cursor:pointer"></canvas>
+      <div class="fxgrid">
+        <label>Slice sensitivity<input data-k="smp.sens" type="range" min="0" max="1" step="0.01"></label>
+        <label>Max slices<select data-k="smp.max"><option value="8">8</option><option value="16">16</option><option value="32">32</option><option value="64">64</option></select></label>
+        <label>Played by<select data-k="smp.mode"><option value="pads">Motion pads (grid)</option><option value="scan">Scan line (bright spots)</option><option value="hits">Movement hits (where)</option><option value="seq">In order, on the beat</option></select></label>
+        <label>Pad grid<select data-k="smp.grid"><option value="2">2 × 2</option><option value="3">3 × 3</option><option value="4">4 × 4</option></select></label>
+        <label class="chk"><input data-k="smp.quant" type="checkbox"> Snap to the beat</label>
+        <label class="chk"><input data-k="smp.choke" type="checkbox"> One slice at a time</label>
+      </div>
+      <div class="maps"></div>
+    </div>
     <div class="sec mod" data-mod="noise">
       <div class="modhead"><label><input data-k="noise.on" type="checkbox"> Texture</label><span class="sub">filtered noise from detail</span></div>
       <div class="maps"></div>
@@ -272,6 +286,7 @@ button.on{border-color:var(--accent);color:var(--accent)}
       <p>In this app the synth's "picture" is normally the visuals output itself (see the Loop tab), so what you hear changes what you see, which changes what you hear. You can also load an image or video, or turn on the webcam, and mix it in. A scan line sweeps across the picture in time with the tempo, like a playhead over a graphic score.</p>
       <p><b>Image score</b>: each step of the scan, the brightest spots in that slice of the picture become notes. Higher in the frame is higher in pitch, and everything is kept in your key and scale. <b>Pad</b> holds chords that change each bar, picked from the picture's colour (or where the light sits). <b>Spectral scanner</b> plays the whole scan line at once as a spectrum, the way early optical synths read drawn sound. <b>Drums</b> come from texture along the scan line (bottom of the frame → kick, middle → snare, top → hats) and from movement: wave at the webcam to play hits. <b>Texture</b> is filtered noise that follows the detail in the picture.</p>
       <p>Each mapping picks one picture feature: <b>brightness</b>, <b>darkness</b>, <b>contrast</b>, <b>colour</b> (saturation), <b>hue</b>, <b>red / green / blue</b>, <b>detail</b> (edges), <b>motion</b>, where the light is (<b>light X / Y</b>), where the movement is (<b>motion X / Y</b>), the brightness under the <b>scan line</b>, or a slow LFO. <i>Base</i> is the resting value, <i>amount</i> is how far the picture pushes it (left of centre pushes the other way).</p>
+      <p><b>Sampler</b>: load any audio (a loop, a beat, a field recording) and it is cut at its hits, like a beat-slicing sampler. Slice sensitivity and Max slices set how many pieces you get; tap the waveform to hear a slice. Then the picture plays them: <i>Motion pads</i> splits the frame into a grid and movement in a square fires its slice (great with the camera); <i>Scan line</i> plays the slice picked by the brightest spot as the line sweeps; <i>Movement hits</i> fires on sudden movement, left-to-right picks the slice; <i>In order</i> plays the slices back on the beat, and movement makes it stutter. Snap to the beat keeps it in time. The audio file is not saved with scenes: load it again next time. MIDI: slices go out on channel 11 from note 36.</p>
       <p><b>Scenes</b> store every sound setting. They're kept in this browser; Export saves them to a file you can back up or Import elsewhere.</p>
       <p>Shortcuts are listed in the Loop tab.</p>
       <p>Everything runs on your computer; files and the camera never leave it.</p>
@@ -3860,6 +3875,7 @@ const DEF_P={
   'spec.on':false, 'spec.tuning':'scale', 'spec.n':24,
   'drum.on':true, 'drum.anchor':true, 'drum.motion':true, 'drum.tune':.5, 'drum.kit':'analog',
   'noise.on':false,
+  'smp.on':true, 'smp.sens':.5, 'smp.max':16, 'smp.mode':'pads', 'smp.grid':4, 'smp.quant':true, 'smp.choke':false,
   'fx.dtime':'0.75', master:.8, look:1, outSize:'1080x1080', outFit:'fill', outFps:30
 };
 const FEATURES=[['none','— fixed —'],['bright','Brightness'],['dark','Darkness'],['contrast','Contrast'],['sat','Colour'],['hue','Hue'],['red','Red'],['green','Green'],['blue','Blue'],['edges','Detail'],['motion','Motion'],['cx','Light X'],['cy','Light Y'],['mx','Motion X'],['my','Motion Y'],['scan','Scan line'],['lfo','Slow LFO']];
@@ -3876,6 +3892,11 @@ const TARGETS=[
   ['spec.focus','Focus',{src:'contrast',base:.4,amt:.4}],
   ['drum.level','Level',{src:'none',base:.75,amt:.5}],
   ['drum.density','Density',{src:'edges',base:.3,amt:.6}],
+  ['smp.level','Level',{src:'none',base:.8,amt:.5}],
+  ['smp.touch','Sensitivity',{src:'none',base:.55,amt:.5}],
+  ['smp.pitch','Pitch',{src:'none',base:.5,amt:.3}],
+  ['smp.length','Slice length',{src:'none',base:1,amt:-.5}],
+  ['smp.reverse','Reverse chance',{src:'none',base:0,amt:.5}],
   ['noise.level','Level',{src:'edges',base:.1,amt:.7}],
   ['noise.freq','Pitch',{src:'cy',base:.85,amt:-.7}],
   ['fx.delay','Delay',{src:'motion',base:.25,amt:.6}],
@@ -3935,7 +3956,7 @@ ROOT.querySelectorAll('[data-k]').forEach(el=>{
   el.addEventListener(el.tagName==='SELECT'||el.type==='checkbox'?'change':'input', ()=>{
     const k=el.dataset.k; let v=readEl(el,k);
     if (k==='bpm') v=clamp(v||96,30,240);
-    S.p[k]=v; onParam(k); syncUI(); save(); markDirty();
+    S.p[k]=v; onParam(k); onSmpParam(k); syncUI(); save(); markDirty();
   });
 });
 ROOT.querySelectorAll('[data-m]').forEach(el=>{
@@ -3945,6 +3966,8 @@ function onParam(k){
   if (!A) return;
   if (k==='pad.wave') A.pad.oscs.forEach(o=>o.type=S.p['pad.wave']);
   if (k==='master') A.master.gain.setTargetAtTime(S.p.master, A.ctx.currentTime, .05);
+}
+function onSmpParam(k){ if (k==='smp.sens'||k==='smp.max') smpSlice();
 }
 
 /* ============================================================
@@ -4029,8 +4052,10 @@ const R={bright:0,dark:1,contrast:0,sat:0,hue:0,red:0,green:0,blue:0,edges:0,mot
 const F={...R};
 let maxL=.5, motAvg=0, lastMotHit=0, pendingMotion=null, lastVT=-1;
 
+const ZM=new Float32Array(16), ZA=new Float32Array(16), ZT=new Float64Array(16); let SG=4;
 function analyse(force){
   const d=ax.getImageData(0,0,AW,AH).data;
+  SG=+S.p['smp.grid']||4; ZM.fill(0);
   const isVid=src.type==='video'||src.type==='cam';
   const fresh = force || !isVid || vid.currentTime!==lastVT; lastVT=vid.currentTime;
   let sl=0,sl2=0,ss=0,sr=0,sg=0,sb=0,hx=0,hy=0,cxs=0,cys=0,cw=0,mot=0,mxs=0,mys=0,edge=0,mL=0;
@@ -4039,7 +4064,7 @@ function analyse(force){
     const mx=r>g?(r>b?r:b):(g>b?g:b), mn=r<g?(r<b?r:b):(g<b?g:b), c=mx-mn;
     const L=.2126*r+.7152*g+.0722*b, s=mx>0?c/mx:0;
     let h=0; if (c>0){ h = mx===r?((g-b)/c)%6 : mx===g?(b-r)/c+2 : (r-g)/c+4; h/=6; if(h<0) h+=1; }
-    if (fresh){ const m=Math.abs(L-PREV[i]); mot+=m; mxs+=x*m; mys+=y*m; PREV[i]=L; }
+    if (fresh){ const m=Math.abs(L-PREV[i]); mot+=m; mxs+=x*m; mys+=y*m; PREV[i]=L; ZM[((y*SG/AH)|0)*SG+((x*SG/AW)|0)]+=m; }
     LUM[i]=L; SAT[i]=s; HUE[i]=h;
     sl+=L; sl2+=L*L; ss+=s; sr+=r; sg+=g; sb+=b; if(L>mL) mL=L;
     const w=s*mx; hx+=Math.cos(h*TAU)*w; hy+=Math.sin(h*TAU)*w;
@@ -4063,6 +4088,7 @@ function analyse(force){
       motAvg += (R.motion-motAvg)*.05;
     }
   }
+  if (fresh && !resetMotion) smpWatch();
   R.lfo=.5+.5*Math.sin(performance.now()/1000*TAU/16);
   const a=.65*Math.pow(1-S.p.response,2)+.025;
   for (const k in R){ if (k==='hue'){ let dd=R.hue-F.hue; if(dd>.5) dd-=1; if(dd<-.5) dd+=1; F.hue=(F.hue+dd*a+1)%1; } else F[k]+=(R[k]-F[k])*(k==='motion'?Math.max(a,.25):a); }
@@ -4123,7 +4149,7 @@ function buildAudio(){
   a.rSend.connect(a.verb).connect(a.rRet).connect(a.sum);
   // voice buses with sends
   a.bus={};
-  for (const [k,ds,rs] of [['arp',.55,.45],['pad',.15,.6],['spec',.2,.5],['drum',.08,.12],['noise',.3,.5]]){
+  for (const [k,ds,rs] of [['arp',.55,.45],['pad',.15,.6],['spec',.2,.5],['drum',.08,.12],['smp',.15,.25],['noise',.3,.5]]){
     const b=G(0); b.connect(a.sum); const d=G(ds), r=G(rs); b.connect(d).connect(a.dSend); b.connect(r).connect(a.rSend); a.bus[k]=b;
   }
   // pad: 4 voices x 2 detuned oscillators -> filter
@@ -4179,6 +4205,7 @@ function doStep(i,t){
   if (i%16===0) changeChord(t);
   if (S.p['arp.on']) arpStep(col,n,t);
   if (S.p['drum.on']) drumStep(i,col,n,t);
+  if (S.p['smp.on']) smpStep(i,col,n,t);
 }
 function changeChord(t){
   if (S.p.autoKey && F.sat>.12){ const k=Math.round(F.hue*12)%12; if (k!==+S.p.key){ S.p.key=k; $('keySel').value=k; } }
@@ -4284,6 +4311,7 @@ function updateAudio(sp){
   T(A.pad.filt.frequency, 120*Math.pow(60,V['pad.cutoff']), .15);
   const det=V['pad.width']*28; A.pad.oscs.forEach((o,j)=>T(o.detune,(j%2?det:-det)+(j>>1)*1.5,.2));
   T(A.bus.drum.gain, S.p['drum.on']?V['drum.level']:0);
+  T(A.bus.smp.gain, S.p['smp.on']?V['smp.level']:0);
   T(A.bus.noise.gain, S.p['noise.on']?V['noise.level']*.35:0, .1);
   T(A.nFilt.frequency, 150*Math.pow(60,V['noise.freq']), .1);
   T(A.dRet.gain, V['fx.delay']*.9); T(A.dFb.gain, V['fx.feedback']*.88, .1);
@@ -4510,6 +4538,94 @@ $('midiBtn').onclick=async()=>{
 };
 $('midiOut').onchange=e=>{ if (midiOut&&A){ for (const m of A.midiPad) midiSend([0x81,m,0],A.ctx.currentTime); A.midiPad=[]; } midiOut=e.target.value?midiAccess.outputs.get(e.target.value):null; };
 
+/* ============================================================
+   Sampler: load audio, cut it at its transients, play the slices from the picture
+   ============================================================ */
+const SMP={buf:null, rev:null, name:'', on:[], strength:[], cur:null, last:-1, lastT:0, curEnd:0};
+async function smpLoad(file){
+  if (!file) return; $('smpName').textContent='Reading '+file.name+'…';
+  try{
+    const ab=await file.arrayBuffer();
+    const dc=A?A.ctx:new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(2,44100,44100);
+    const buf=await new Promise((res,rej)=>{ const p=dc.decodeAudioData(ab,res,rej); if (p&&p.then) p.then(res,rej); });
+    SMP.buf=buf; SMP.name=file.name;
+    const ch=buf.numberOfChannels, n=buf.length, rv=new AudioBuffer({length:n,numberOfChannels:ch,sampleRate:buf.sampleRate});
+    for (let c=0;c<ch;c++){ const s=buf.getChannelData(c), d=rv.getChannelData(c); for (let i=0;i<n;i++) d[i]=s[n-1-i]; }
+    SMP.rev=rv; smpAnalyse(); smpSlice();
+    if (!S.p['smp.on']){ S.p['smp.on']=true; syncUI(); save(); }
+  }catch(err){ $('smpName').textContent='Could not read that file on this device. Try MP3, M4A/AAC or WAV.'; }
+}
+// onset strength per 512-sample hop: rise in high-passed energy (transients)
+function smpAnalyse(){
+  const b=SMP.buf, sr=b.sampleRate, n=b.length, hop=512, ch=b.numberOfChannels, a=b.getChannelData(0), c2=ch>1?b.getChannelData(1):a;
+  const F=Math.floor(n/hop), E=new Float32Array(F); let prev=0;
+  for (let f=0;f<F;f++){ let e=0; for (let i=f*hop;i<(f+1)*hop;i++){ const x=(a[i]+c2[i])*.5, d=x-prev; prev=x; e+=d*d; } E[f]=Math.log(1e-9+e); }
+  const O=new Float32Array(F); for (let f=1;f<F;f++) O[f]=Math.max(0,E[f]-E[f-1]);
+  SMP.onset=O; SMP.hop=hop/sr; SMP.dur=n/sr;
+}
+function smpSlice(){
+  if (!SMP.buf) return;
+  const O=SMP.onset, F=O.length, W=12, sens=S.p['smp.sens'], k=.7, gap=Math.round((.3-.24*sens)/SMP.hop), cand=[];
+  for (let f=1;f<F-1;f++){ if (O[f]<O[f-1]||O[f]<O[f+1]) continue; let m=0,c=0; for (let j=Math.max(0,f-W);j<Math.min(F,f+W);j++){ m+=O[j]; c++; } m/=c;
+    if (O[f]>m*k+.1) cand.push([f,O[f]]); }
+  cand.sort((x,y)=>y[1]-x[1]); const pick=[], keep=Math.max(1,Math.ceil(cand.length*(.06+.94*Math.pow(sens,1.4))));   // sensitivity: how many of the hits become cuts
+  for (const [f,v] of cand.slice(0,keep)){ if (pick.length>=(+S.p['smp.max'])-1) break; if (pick.every(([g])=>Math.abs(g-f)>=gap)) pick.push([f,v]); }
+  pick.sort((x,y)=>x[0]-y[0]);
+  SMP.on=[0, ...pick.map(([f])=>Math.max(0,(f-1)*SMP.hop)).filter(t=>t>.03)]; SMP.strength=[1,...pick.map(([,v])=>v)];
+  $('smpName').textContent=SMP.name+' · '+SMP.on.length+' slices · '+SMP.dur.toFixed(1)+' s';
+  smpWave();
+}
+function smpWave(){
+  const cv=$('smpWave'); if (!cv) return; const g=cv.getContext('2d'), w=cv.width, h=cv.height; g.fillStyle='#0f1115'; g.fillRect(0,0,w,h);
+  if (!SMP.buf){ g.fillStyle='#8b909c'; g.font='13px system-ui'; g.fillText('Load a loop, a beat or any sound: it gets cut at its hits',10,h/2+4); return; }
+  const d=SMP.buf.getChannelData(0), step=Math.max(1,Math.floor(d.length/w));
+  const cols=['#7cf2c8','#ff5fa2','#ffcc66','#8fb4ff'];
+  for (let i=0;i<SMP.on.length;i++){ const x0=SMP.on[i]/SMP.dur*w, x1=(SMP.on[i+1]??SMP.dur)/SMP.dur*w;
+    g.fillStyle=i===SMP.last&&performance.now()-SMP.lastT<250?'#ffffff22':(i%2?'#ffffff08':'#ffffff00'); g.fillRect(x0,0,x1-x0,h);
+    g.strokeStyle=cols[i%4]; g.globalAlpha=.9; g.beginPath(); for (let x=Math.floor(x0);x<x1;x++){ let mx=0; for (let j=x*step;j<(x+1)*step&&j<d.length;j+=4) mx=Math.max(mx,Math.abs(d[j])); g.moveTo(x+.5,h/2-mx*h*.46); g.lineTo(x+.5,h/2+mx*h*.46); } g.stroke(); g.globalAlpha=1;
+    g.fillStyle='#ffffffaa'; g.fillRect(Math.floor(x0),0,1,h); g.font='10px system-ui'; g.fillText(String(i+1),x0+3,11); }
+}
+function smpPlay(idx,t,vel,pan){
+  if (!A||!SMP.buf||!SMP.on.length) return; const ctx=A.ctx, n=SMP.on.length; idx=((idx%n)+n)%n;
+  const st=SMP.on[idx], en=SMP.on[idx+1]??SMP.dur, rate=Math.pow(2,(V['smp.pitch']-.5)*2), len=Math.max(.03,(en-st)*Math.max(.08,V['smp.length']));
+  const rev=Math.random()<V['smp.reverse']*.9;
+  if (S.p['smp.choke'] && SMP.cur){ try{ SMP.cur.g.gain.setTargetAtTime(0,t,.008); SMP.cur.s.stop(t+.05); }catch(e){} }
+  const s=ctx.createBufferSource(); s.buffer=rev?SMP.rev:SMP.buf; s.playbackRate.value=rate;
+  const g=ctx.createGain(), real=len/rate; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel,t+.004); g.gain.setValueAtTime(vel,t+Math.max(.005,real-.02)); g.gain.linearRampToValueAtTime(0,t+real);
+  let node=g; if (ctx.createStereoPanner){ const p=ctx.createStereoPanner(); p.pan.value=clamp(pan,-1,1); g.connect(p); node=p; }
+  s.connect(g); node.connect(A.bus.smp); s.start(t, rev?SMP.dur-st-len:st, len+.01); s.stop(t+real+.05);
+  SMP.cur={s,g}; SMP.last=idx; SMP.lastT=performance.now()+Math.max(0,t-ctx.currentTime)*1000;
+  midiNote(10,36+idx%64,Math.round(vel*120),t,Math.min(.5,real));
+}
+function smpWhen(){ const ct=A.ctx.currentTime; if (!S.p['smp.quant']) return ct+.01; const q=stepDur(); let t=A.nextBase; while (t-q>ct+.01) t-=q; return t; }
+// motion pads / movement hits, checked on every fresh frame
+function smpWatch(){
+  if (!A||!running||!S.p['smp.on']||!SMP.buf) return; const mode=S.p['smp.mode']; if (mode!=='pads'&&mode!=='hits') return;
+  const g=SG, now=performance.now(), cells=AN/(g*g), thr=.02+(1-V['smp.touch'])*.12;
+  if (mode==='pads'){ for (let z=0;z<g*g;z++){ const m=ZM[z]/cells*9;
+      if (m>ZA[z]*1.8+thr && now-ZT[z]>160){ ZT[z]=now; const gx=z%g, gy=(z/g)|0, t=smpWhen(); smpPlay(z,t,clamp(.45+(m-ZA[z])*2.5),(gx/(g-1||1))*1.4-.7);
+        if (S.p.scan==='tb') hit(gy,g,gx,g,t,.35,'#b48cff',true); else hit(gx,g,gy,g,t,.35,'#b48cff',true); }
+      ZA[z]+=(m-ZA[z])*.06; } }
+  else { let m=0; for (let z=0;z<g*g;z++) m+=ZM[z]; m=m/AN*9;
+    if (m>ZA[0]*1.7+thr*.6 && now-ZT[0]>140){ ZT[0]=now; const n=SMP.on.length, idx=Math.floor(clamp(R.mx,0,.999)*n), t=smpWhen(); smpPlay(idx,t,clamp(.4+(m-ZA[0])*3),R.mx*1.4-.7);
+      const c=Math.floor(R.mx*16), k=Math.floor(R.my*8); if (S.p.scan==='tb') hit(k,8,c,16,t,.35,'#b48cff',false); else hit(c,16,k,8,t,.35,'#b48cff',false); }
+    ZA[0]+=(m-ZA[0])*.05; }
+}
+// scan line / in-order modes, on the sequencer clock
+let smpSeq=0;
+function smpStep(i,col,n,t){
+  if (!SMP.buf) return; const mode=S.p['smp.mode'], ns=SMP.on.length;
+  if (mode==='scan'){ const m=8; let best=-1,bv=0; for (let k=0;k<m;k++){ const c=slice(col,n,k,m); if (c.Ln>bv){ bv=c.Ln; best=k; } }
+    if (best>=0 && bv>1.05-V['smp.touch']*.75){ const idx=Math.floor((1-(best+.5)/m)*ns); smpPlay(idx,t,clamp(.35+bv*.6),(col/(n-1||1))*1.2-.6); hit(col,n,best,m,t,.3,'#b48cff',false); } }
+  else if (mode==='seq'){ const c=slice(col,n,0,1); if (i%2===1 && c.Ln<.25-V['smp.touch']*.2+.2 && Math.random()<.5) return;   // dark columns leave gaps
+    let idx=smpSeq%ns; if (F.motion>.45 && Math.random()<F.motion*V['smp.touch']) idx=Math.max(0,SMP.last); else smpSeq++;    // movement repeats (stutter)
+    smpPlay(idx,t,clamp(.4+c.Ln*.6),0); hit(col,n,0,1,t,.2,'#b48cff',true); }
+}
+$('smpFile').onchange=e=>{ smpLoad(e.target.files[0]); e.target.value=''; };
+$('smpWave').onclick=e=>{ if (!SMP.buf) return; const r=e.currentTarget.getBoundingClientRect(), tt=(e.clientX-r.left)/r.width*SMP.dur; let idx=0; for (let i=0;i<SMP.on.length;i++) if (SMP.on[i]<=tt) idx=i;
+  if (!A) A=buildAudio(); A.ctx.resume(); if (!running) A.bus.smp.gain.value=V['smp.level']; smpPlay(idx,A.ctx.currentTime+.02,.9,0); };
+setInterval(()=>{ if (SMP.buf && performance.now()-SMP.lastT<400) smpWave(); },120);
+smpWave();
 /* ============================================================
    Keyboard
    ============================================================ */
