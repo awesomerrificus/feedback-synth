@@ -589,7 +589,7 @@ if (document.readyState==='loading') document.addEventListener('DOMContentLoaded
       <h2>Record</h2>
       <div class="sec">
         <div class="row"><button id="lRecVid" class="rec" title="V">● Record video</button><button id="lRecWav" class="rec" title="W">● Record WAV</button><button id="lFs" title="F">Fullscreen</button></div>
-        <div class="small">Video is the output picture plus all the sound (synth and track), in the format set under Visuals › Output. WAV is the synth alone, 24-bit.</div>
+        <div class="small">Video is the output picture plus all the sound (synth and track), in the format set under Visuals › Output. WAV is the whole mix from the console, 24-bit.</div>
       </div>
 
       <h2>Help</h2>
@@ -742,7 +742,7 @@ if (document.readyState==='loading') document.addEventListener('DOMContentLoaded
     <h2>6 · Record &amp; MIDI</h2>
     <div class="sec">
       <div class="row"><button id="as-recWav" class="rec" title="W">● Record WAV</button></div>
-            <div id="as-recInfo" class="small">WAV is the synth on its own, 24-bit stereo. For picture + sound, use Record video in the Loop tab.</div>
+            <div id="as-recInfo" class="small">WAV is the whole mix from the console, 24-bit stereo. For picture + sound, use Record video in the Loop tab.</div>
       <div class="row"><button id="as-midiBtn">Enable MIDI out</button><select id="as-midiOut" style="flex:1;min-width:0;display:none"></select></div>
       <div id="as-midiInfo" class="small">Sends the score to your DAW or hardware: notes on ch 1, pad chords on ch 2, drums on ch 10.</div>
     </div>
@@ -3868,11 +3868,16 @@ async function renderOffline(){
   try{
     info.textContent='Decoding audio…';
     if (!decodedTrack){ const dctx=new OfflineAudioContext(2, 48000, 48000); decodedTrack=await dctx.decodeAudioData(await trackFile.arrayBuffer()); }
-    const buf=decodedTrack, sr=buf.sampleRate, ch=Math.min(2,buf.numberOfChannels), dur=buf.duration;
+    const buf=decodedTrack, sr=buf.sampleRate, dur=buf.duration; let ch=Math.min(2,buf.numberOfChannels);
     const mono=new Float32Array(buf.length); for (let c=0;c<buf.numberOfChannels;c++){ const d=buf.getChannelData(c); for (let i=0;i<d.length;i++) mono[i]+=d[i]/buf.numberOfChannels; }
     const t0=Math.max(0,Math.min(dur,+$('rStart').value||0)), t1=Math.max(t0, Math.min(dur, $('rEnd').value===''?dur:+$('rEnd').value));
     const f0=Math.round(t0*fps), f1=Math.round(t1*fps), total=f1-f0;
     if (total<1) throw new Error('Range is empty.');
+    let abuf=buf; if (window.EM_mixAudio){ info.textContent='Mixing audio…'; let snaps=null;
+      if (EM_mixNeedsSnaps()){ const ob=onBeat, oo=onOnset, or=rnd; onBeat=onOnset=null; rnd=seededRandom(1); resetAnalysis(); snaps=[];
+        for (let f=0;f<f1;f++){ vnow=f*1000/fps; analyseAt(mono,sr,f/fps,1/fps); snaps.push(Object.assign({},A)); }
+        onBeat=ob; onOnset=oo; rnd=or; resetAnalysis(); vnow=0; }
+      abuf=await EM_mixAudio(buf,snaps,fps); ch=Math.min(2,abuf.numberOfChannels); }
     const vc=await pickVideoCodec(W,H,fps,bitrate); if(!vc) throw new Error('This browser cannot encode video at '+W+'×'+H+'.');
     const ac=await pickAudioCodec(ch); if(!ac) throw new Error('This browser cannot encode audio.');
     const target = writable ? new Mp4Muxer.FileSystemWritableFileStreamTarget(writable) : new Mp4Muxer.ArrayBufferTarget();
@@ -3901,12 +3906,12 @@ async function renderOffline(){
       for (const [m,slot] of need){ if (m && m.type==='video'){ const d=m.el.duration||1; await seekTo(m.el, ((m.vt%d)+d)%d); uploadVideo(m,slot); } else if (m && m.type==='gen') uploadVideo(m,slot); }
       draw(vnow);
       const ts=Math.round((f-f0)*1e6/fps);
-      const vf=new VideoFrame(canvas,{timestamp:ts, duration:Math.round(1e6/fps)});
+      const vf=new VideoFrame(window.EM_renderFrame?EM_renderFrame():canvas,{timestamp:ts, duration:Math.round(1e6/fps)});
       vEnc.encode(vf,{keyFrame:(f-f0)%(fps*2)===0}); vf.close();
       // audio up to this frame's end
       const aTo=Math.min(s1, s0+Math.round((f-f0+1)*sr/fps));
       while (aPos<aTo){ const n=Math.min(4800,aTo-aPos), data=new Float32Array(n*ch);
-        for (let c=0;c<ch;c++) data.set(buf.getChannelData(c).subarray(aPos,aPos+n), c*n);
+        for (let c=0;c<ch;c++) data.set(abuf.getChannelData(c).subarray(aPos,aPos+n), c*n);
         const ad=new AudioData({format:'f32-planar',sampleRate:sr,numberOfFrames:n,numberOfChannels:ch,timestamp:Math.round((aPos-s0)*1e6/sr),data});
         aEnc.encode(ad); ad.close(); aPos+=n; }
       while (vEnc.encodeQueueSize>4) await new Promise(r=>setTimeout(r,2));
@@ -5118,7 +5123,7 @@ function buildAudio(){
   const ns=ctx.createBufferSource(); ns.buffer=nb; ns.loop=true; a.nFilt=ctx.createBiquadFilter(); a.nFilt.type='bandpass'; a.nFilt.Q.value=1.4;
   ns.connect(a.nFilt).connect(a.bus.noise); ns.start();
   // WAV tap
-  a.tap=ctx.createScriptProcessor(4096,2,2); a.out.connect(a.tap); const z=G(0); a.tap.connect(z).connect(ctx.destination);
+  a.tap=ctx.createScriptProcessor(4096,2,2); { const ms=window.EM_master?EM_master(ctx):null; (ms?ms.out:a.out).connect(a.tap); } const z=G(0); a.tap.connect(z); (window.EM_oconnect||AudioNode.prototype.connect).call(z,ctx.destination);
   a.tap.onaudioprocess=e=>{ if (!wav.on) return; const ib=e.inputBuffer; wav.L.push(new Float32Array(ib.getChannelData(0))); wav.R.push(new Float32Array(ib.numberOfChannels>1?ib.getChannelData(1):ib.getChannelData(0))); wav.len+=ib.length; };
   a.nextBase=ctx.currentTime+.08;
   return a;
@@ -6057,9 +6062,9 @@ const ST={}; // runtime strips: {nodes, ui}
 /* ---------- audio graph ---------- */
 const oconnect=AudioNode.prototype.connect;
 let MCTX=null, MASTER=null; const RECS=new Set();
-function mkStrip(ctx, id){
+function mkStrip(ctx, id, offline){
   const G=v=>{ const g=ctx.createGain(); g.gain.value=v; return g; };
-  const n={ctx}; n.in=G(1);
+  const n={ctx}; n.in=G(1); n.in.channelCount=2; n.in.channelCountMode='explicit'; n.in.channelInterpretation='speakers'; // mono sources reach both sides
   n.eq=BANDS.map(b=>{ const f=ctx.createBiquadFilter(); f.type=b.t; return f; });
   let x=n.in; for (const f of n.eq){ oconnect.call(x,f); x=f; }
   // stereo width (mid/side)
@@ -6074,7 +6079,7 @@ function mkStrip(ctx, id){
   oconnect.call(n.mg,n.pan); oconnect.call(n.pan,n.fad); oconnect.call(n.fad,n.mute); oconnect.call(n.mute,n.out);
   n.an=ctx.createAnalyser(); n.an.fftSize=512; oconnect.call(n.out,n.an); n.buf=new Float32Array(512);
   if (id==='master'){ n.lim=ctx.createDynamicsCompressor(); n.lim.threshold.value=-1.5; n.lim.knee.value=0; n.lim.ratio.value=20; n.lim.attack.value=.002; n.lim.release.value=.12;
-    n.out.disconnect(); oconnect.call(n.mute,n.lim); oconnect.call(n.lim,n.out); oconnect.call(n.out,n.an); oconnect.call(n.out,ctx.destination); for (const r of RECS) oconnect.call(n.out,r); }
+    n.out.disconnect(); oconnect.call(n.mute,n.lim); oconnect.call(n.lim,n.out); oconnect.call(n.out,n.an); oconnect.call(n.out,ctx.destination); if (!offline) for (const r of RECS) oconnect.call(n.out,r); }
   return n;
 }
 function ensureMaster(ctx){ if (!MASTER){ MCTX=ctx; MASTER=mkStrip(ctx,'master'); ST.master.n=MASTER; apply('master'); } return MASTER; }
@@ -6092,19 +6097,43 @@ AudioNode.prototype.connect=function(t,...r){
 window.EM_strip=(id,ctx)=>{ const s=ST[id]; if (!s) return null; ensureMaster(ctx); if (!s.n){ s.n=mkStrip(ctx,id); oconnect.call(s.n.out,MASTER.in); apply(id); s.ui.el.classList.add('live'); } return s.n; };
 
 /* ---------- applying parameters (with automation) ---------- */
-function eff(id,p,base){ let v=base; for (const a of SAVE.auto) if (a.ch===id && a.p===p) v+=a.amt*sig(a.src); return clamp01(v); }
+function eff(id,p,base,sg){ sg=sg||sig; let v=base; for (const a of SAVE.auto) if (a.ch===id && a.p===p) v+=a.amt*sg(a.src); return clamp01(v); }
+function calcE(id,sg){ const c=SAVE.ch[id], E={};
+  E.fad=eff(id,'fad',c.fad,sg); E.pan=eff(id,'pan',c.pan,sg); E.wid=eff(id,'wid',c.wid,sg);
+  E.eq=c.eq.map((b,i)=>({f:eff(id,'f'+i,b.f,sg),g:eff(id,'g'+i,b.g,sg),q:eff(id,'q'+i,b.q,sg)})); return E; }
+function setNode(n,E,on,t,k){ const S=(p,v,kk)=>(kk||k)<.001?p.setValueAtTime(v,t):p.setTargetAtTime(v,t,kk||k);
+  const db=fad2db(E.fad); S(n.fad.gain,isFinite(db)?Math.pow(10,db/20):0);
+  if (n.pan.pan) S(n.pan.pan,E.pan*2-1);
+  S(n.side.gain,E.wid*2);
+  E.eq.forEach((b,i)=>{ const f=n.eq[i]; S(f.frequency,n2f(b.f)); S(f.gain,n2g(b.g)); S(f.Q,n2q(b.q)); });
+  S(n.mute.gain,on?1:0,k<.001?k:.01); }
+const chOn=id=>{ const c=SAVE.ch[id]; return !c.mute && (id==='master'||!anySolo()||c.solo); };
 function anySolo(){ for (const [id] of CH) if (id!=='master' && SAVE.ch[id].solo) return true; return false; }
-function apply(id, live){ const s=ST[id], c=SAVE.ch[id]; if (!s) return; const E={};
-  E.fad=eff(id,'fad',c.fad); E.pan=eff(id,'pan',c.pan); E.wid=eff(id,'wid',c.wid);
-  E.eq=c.eq.map((b,i)=>({f:eff(id,'f'+i,b.f),g:eff(id,'g'+i,b.g),q:eff(id,'q'+i,b.q)}));
+function apply(id, live){ const s=ST[id]; if (!s) return; const E=calcE(id);
   s.E=E; if (s.ui) s.ui.show(E);
-  const n=s.n; if (!n) return; const t=n.ctx.currentTime, k=live?.03:.01;
-  const db=fad2db(E.fad); n.fad.gain.setTargetAtTime(isFinite(db)?Math.pow(10,db/20):0,t,k);
-  if (n.pan.pan) n.pan.pan.setTargetAtTime(E.pan*2-1,t,k);
-  n.side.gain.setTargetAtTime(E.wid*2,t,k);
-  E.eq.forEach((b,i)=>{ const f=n.eq[i]; f.frequency.setTargetAtTime(n2f(b.f),t,k); f.gain.setTargetAtTime(n2g(b.g),t,k); f.Q.setTargetAtTime(n2q(b.q),t,k); });
-  const solo=anySolo(); const on=!c.mute && (id==='master'||!solo||c.solo); n.mute.gain.setTargetAtTime(on?1:0,t,.01);
+  const n=s.n; if (!n) return; setNode(n,E,chOn(id),n.ctx.currentTime,live?.03:.01);
 }
+/* ---------- offline render: the track through its strip and the master, automation included ---------- */
+window.EM_master=ctx=>ensureMaster(ctx);
+window.EM_oconnect=oconnect;
+window.EM_mixNeedsSnaps=()=>SAVE.auto.some(a=>a.ch==='track'||a.ch==='master');
+window.EM_mixAudio=async(buf,snaps,fps)=>{
+  const sr=buf.sampleRate, oc=new OfflineAudioContext(2,buf.length,sr);
+  const src=oc.createBufferSource(); src.buffer=buf;
+  const tr=mkStrip(oc,'track',true), ms=mkStrip(oc,'master',true);
+  oconnect.call(src,tr.in); oconnect.call(tr.out,ms.in);
+  for (const [id,n] of [['track',tr],['master',ms]]){
+    // start exactly at the settings, then follow automation frame by frame
+    const E0=calcE(id,()=>0); setNode(n,E0,chOn(id),0,.0001);
+    if (snaps && snaps.length && SAVE.auto.some(a=>a.ch===id)){
+      const live=k=>sig(k);
+      for (let f=0;f<snaps.length;f++){ const sn=snaps[f];
+        const sg=k=>k==='none'?0:k[0]==='p'?live(k):/^s[A-Z]/.test(k)?0:clamp01(+sn[k]||0);
+        setNode(n,calcE(id,sg),chOn(id),f/fps,.03); } }
+  }
+  src.start(0); return await oc.startRendering();
+};
+window.EM_renderFrame=()=>{ if (!V.on) return canvas; vxFrame(); return pgm; };
 const applyAll=live=>{ for (const [id] of CH) apply(id,live); };
 
 /* ---------- drag controls ---------- */
@@ -6147,7 +6176,7 @@ function select(id){ SEL=id; document.querySelectorAll('.mxS').forEach(s=>s.clas
   buildBands(); fillAParams(); listAuto(); drawEq(); }
 
 /* EQ panel */
-let OFF=null; const ofb=()=>{ if (!OFF){ try{ OFF=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(1,128,48000); OFF.f=BANDS.map(b=>{ const f=OFF.createBiquadFilter(); f.type=b.t; return f; }); }catch(e){} } return OFF; };
+let EQOFF=null; const ofb=()=>{ if (!EQOFF){ try{ EQOFF=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(1,128,48000); EQOFF.f=BANDS.map(b=>{ const f=EQOFF.createBiquadFilter(); f.type=b.t; return f; }); }catch(e){} } return EQOFF; };
 const FR=new Float32Array(256); for (let i=0;i<256;i++) FR[i]=n2f(i/255); const MAG=new Float32Array(256), PH=new Float32Array(256);
 function drawEq(){ const cv=$m('mxEq'), g=cv.getContext('2d'), W=cv.width, H=cv.height, c=SAVE.ch[SEL], E=(ST[SEL]&&ST[SEL].E)||{eq:c.eq};
   g.fillStyle='#080808'; g.fillRect(0,0,W,H); g.strokeStyle='#ffffff14'; g.lineWidth=1;
@@ -6235,7 +6264,9 @@ let KM=null, KG=null; function keyMask(W,H){ // luma key on a small copy of B, s
   KG.clearRect(0,0,w,h); KG.drawImage(bufB,0,0,w,h); const im=KG.getImageData(0,0,w,h), d=im.data, th=V.key*255, soft=24;
   for (let i=0;i<d.length;i+=4){ const l=.3*d[i]+.59*d[i+1]+.11*d[i+2]; d[i+3]=Math.max(0,Math.min(255,(l-th+soft)*255/(2*soft))); }
   KG.putImageData(im,0,0); }
+const vxNow=()=>(typeof OFF!=='undefined'&&OFF)?vnow:performance.now(); let wasOff=false;
 function vxFrame(){
+  const off=(typeof OFF!=='undefined'&&!!OFF); if (off!==wasOff){ wasOff=off; autoRun=null; lastBeat=-1; barBeats=0; }
   if (!V.on){ if (pgm) pgm.style.display='none'; canvas.style.visibility=''; return; }
   const W=canvas.width, H=canvas.height;
   if (!pgm){ pgm=document.createElement('canvas'); pgm.id='vxPgm'; pg=pgm.getContext('2d'); bufA=document.createElement('canvas'); gA=bufA.getContext('2d'); bufB=document.createElement('canvas'); gB=bufB.getContext('2d');
@@ -6243,8 +6274,8 @@ function vxFrame(){
   for (const c of [pgm,bufA,bufB]) if (c.width!==W||c.height!==H){ c.width=W; c.height=H; }
   pgm.style.display=''; pgm.style.width=canvas.style.width; pgm.style.height=canvas.style.height; canvas.style.visibility='hidden';
   // auto transition
-  if (autoRun){ const p=Math.min(1,(performance.now()-autoRun.t0)/autoRun.ms); V.t=p; if (p>=1){ autoRun=null; swap(); } }
-  if (V.every!=='0' && typeof beatCount!=='undefined'){ if (beatCount!==lastBeat){ if (lastBeat>=0){ barBeats+=beatCount-lastBeat; if (barBeats>=4*+V.every){ barBeats=0; if (!autoRun) auto(); } } lastBeat=beatCount; } }
+  if (autoRun){ const p=Math.min(1,(vxNow()-autoRun.t0)/autoRun.ms); V.t=p; if (p>=1){ autoRun=null; swap(); } }
+  if (V.every!=='0' && typeof beatCount!=='undefined'){ if (beatCount<lastBeat) lastBeat=beatCount; if (beatCount!==lastBeat){ if (lastBeat>=0){ barBeats+=beatCount-lastBeat; if (barBeats>=4*+V.every){ barBeats=0; if (!autoRun) auto(); } } lastBeat=beatCount; } }
   drawSrc(V.a,gA,W,H); const t=tNow(); if (t>0.001||$m('vxPB')) drawSrc(V.b,gB,W,H);
   composite(t,W,H);
   const ov=$m('ovl'); if (ov && typeof EM_ovlShown==='function' && EM_ovlShown()) try{ pg.drawImage(ov,0,0,W,H); }catch(e){}
@@ -6254,7 +6285,7 @@ function vxFrame(){
 }
 function swap(){ const a=V.a; V.a=V.b; V.b=a; V.t=0; $m('vxA').value=V.a; $m('vxB').value=V.b; $m('vxT').value=0; save(); }
 function durMs(){ const d=V.dur, n=parseFloat(d.slice(1)); if (d[0]==='s') return n*1000; const bpm=(typeof AS!=='undefined'&&+AS.S.p.bpm)||120; return n*4*60000/Math.max(40,bpm); }
-function auto(){ autoRun={t0:performance.now()-V.t*durMs(), ms:durMs()}; }
+function auto(){ autoRun={t0:vxNow()-V.t*durMs(), ms:durMs()}; }
 window.EM_vxFrame=vxFrame;
 
 /* ---------- per-frame: automation + meters ---------- */
