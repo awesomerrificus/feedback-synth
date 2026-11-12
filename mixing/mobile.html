@@ -215,6 +215,7 @@ label.small,.small{font-size:12px}
 .vxT input::-webkit-slider-thumb{width:30px!important;height:26px!important;margin-top:-11px!important}
 #vxPgm{display:block;background:#000;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 @media (pointer:coarse){.mxFW{height:170px}.mxKn{width:38px;height:38px}.mxF{width:32px}}
+#asStage{display:block;background:#000;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 </style>
 <!--vt-->
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -310,12 +311,13 @@ input[type=range]:focus{outline:none} input[type=range]:focus-visible::-webkit-s
 // synth switcher: home-screen web apps have no browser controls, so link the synths to each other
 (function(){ if (window.__emSw) return; window.__emSw=1;
   const add=()=>{ const panel=document.getElementById('panel'); if (!panel || document.getElementById('synthSw')) return;
-    const path=location.pathname, sub=/\/(audio-synth|video-synth|mixing)\//.exec(path), here=document.getElementById('mxSec')||/mixing/i.test(document.title)?'mixing':sub?sub[1].replace('-synth',''):(document.querySelector('.tabs [data-tab="loop"]')?'feedback':(document.getElementById('vsmSec')?'video':'audio'));
+    const path=location.pathname, sub=/\/(audio-synth|video-synth|mixing)\//.exec(path), here=window.EM_view||(document.getElementById('mxSec')||/mixing/i.test(document.title)?'mixing':sub?sub[1].replace('-synth',''):(document.querySelector('.tabs [data-tab="loop"]')?'feedback':(document.getElementById('vsmSec')?'video':'audio')));
     const mode=/mobile/i.test(path.split('/').pop())||document.body.classList.contains('mobile')?'mobile':'desktop', root=sub?'../':'';
     const L=[['home','Home',root+'index.html'],['feedback','Feedback',root+mode+'.html'],['audio','Audio',root+'audio-synth/'+mode+'.html'],['video','Video',root+'video-synth/'+mode+'.html'],['mixing','Mixing',root+'mixing/'+mode+'.html']];
     const nav=document.createElement('nav'); nav.id='synthSw'; nav.setAttribute('aria-label','Switch synth');
     nav.innerHTML=L.map(([k,t,h])=>`<a href="${h}" data-k="${k}"${k===here?' class="on" aria-current="page"':''}>${t}</a>`).join('');
     nav.addEventListener('click',e=>{ const a=e.target.closest('a'); if (!a) return; e.preventDefault(); if (a.classList.contains('on')) return;
+      if (window.EM_setView && a.dataset.k!=='home'){ EM_setView(a.dataset.k); return; }
       if (!confirm('Switch to '+(a.dataset.k==='home'?'the home page':'the '+a.textContent+' synth')+'? Files you loaded here will need loading again.')) return;
       location.href=a.getAttribute('href'); });
     panel.prepend(nav); };
@@ -406,7 +408,7 @@ W.audio=[
   {el:'#smpAdd',t:'More samplers',b:`<p>Add up to three samplers.</p>`}]},
  {name:'Record & MIDI',sub:'Save audio or video',steps:[
   {el:'#recWav',t:'Record WAV',b:`<p>Records the sound as a high-quality WAV file.</p>`},
-  {el:'#recClip',t:'Record clip',b:`<p>Records the picture and sound together as a video.</p>`},
+  {el:['#recClip','#lRecVid'],t:'Record clip',b:`<p>Records the picture and sound together as a video.</p>`},
   {el:'#midiBtn',t:'MIDI out',b:`<p>Sends the notes to other synths or your DAW (desktop Chrome or Edge).</p>`}]}
 ];
 W.combo=[
@@ -449,7 +451,7 @@ W.mix=[
   {el:'#vxAuto',tab:'mix',t:'Cut & Auto',b:`<p><em>Cut</em> swaps instantly; <em>Auto</em> runs the transition over the length you pick. <em>Auto on the beat</em> does it every few bars by itself.</p>`},
   {el:'#vxTSrc',tab:'mix',t:'T-bar automation',b:`<p>The T-bar can follow a signal too, for example flashing B in on every snare.</p>`}]}
 ];
-let TOURS=null; const kindNow=()=>has('#mxSec') ? 'mix' : has('.tabs [data-tab="loop"]') ? 'combo' : has('#vsmSec') ? 'video' : 'audio';
+let TOURS=null; const kindNow=()=>window.EM_view ? ({feedback:'combo',audio:'audio',video:'video',mixing:'mix'})[EM_view] : has('#mxSec') ? 'mix' : has('.tabs [data-tab="loop"]') ? 'combo' : has('#vsmSec') ? 'video' : 'audio';
 
 // ---------- player ----------
 let spot, card, cur=null, idx=0, raf=0, target=null;
@@ -474,7 +476,10 @@ function place(){ if (!cur) return; const pad=6, vw=innerWidth, vh=innerHeight;
 function loop(){ place(); raf=requestAnimationFrame(loop); }
 function show(dir){ const tour=cur, s=tour.steps[idx];
   if (s.tab){ const tb=document.querySelector('.tabs button[data-tab="'+s.tab+'"]'); if (tb && !tb.classList.contains('on')) tb.click(); }
-  target=s.el?q(s.el):null; if (target) openFold(target);
+  const asel=e=>Array.isArray(e)?e.map(asel):String(e).replace(/#([\w-]+)/g,'#as-$1'); // one-app rig: audio ids carry as-
+  target=s.el?((window.EM_view==='audio'&&q(asel(s.el)))||q(s.el)):null;
+  if (target && target.closest){ const tp=target.closest('.tab'); if (tp && !tp.classList.contains('on')){ const tb=document.querySelector('.tabs button[data-tab="'+tp.id.slice(4)+'"]'); if (tb && tb.style.display!=='none') tb.click(); } }
+  if (target) openFold(target);
   if (s.el && (!target || !target.getClientRects().length)){ const nx=idx+(dir<0?-1:1); if (nx>=0 && nx<tour.steps.length){ idx=nx; return show(dir); } if (dir>=0 && idx>0) return menu(true); }
   if (target) target.scrollIntoView({block:'center',behavior:'smooth'});
   const last=idx===tour.steps.length-1;
@@ -485,7 +490,7 @@ function show(dir){ const tour=cur, s=tour.steps[idx];
 function go(d){ if (!cur) return; idx+=d; if (idx<0) idx=0; if (idx>=cur.steps.length) return menu(true); show(d); }
 function start(i){ ensure(); cur=TOURS[i]; idx=0; LS.set('em-tour-seen','1'); nudgeOff(); show(); cancelAnimationFrame(raf); loop(); }
 function end(){ cur=null; target=null; cancelAnimationFrame(raf); if (spot){ spot.style.display='none'; card.style.display='none'; } }
-function menu(done){ ensure(); end(); nudgeOff(); LS.set('em-tour-seen','1');
+function menu(done){ ensure(); end(); nudgeOff(); TOURS=W[kindNow()]; LS.set('em-tour-seen','1');
   card.style.setProperty('--tc','#e5463f');
   card.innerHTML=`<div class="th"><span>${done?'Nice! Another tour?':'Guided tours'}</span></div><div class="tx"><p>Pick a walkthrough. You can use the controls as you go, and end it any time with ✕ or Esc.</p></div>
    <div class="tl">${TOURS.map((t,i)=>`<button data-i="${i}">${t.name}<i>${t.sub}</i></button>`).join('')}</div>
@@ -6321,6 +6326,67 @@ function init(){
   requestAnimationFrame(tick);
 }
 if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+
+</script>
+<script>
+/* Electric Mountain rig: one page, four devices (views) over the same running engines.
+   Switching views never reloads, so sound and pictures keep going. */
+(function(){
+const VIEWS={
+  feedback:{tabs:['loop','sound','visuals','mix'], name:'Feedback Synth', dir:''},
+  audio:{tabs:['sound','loop','mix'], name:'Audio Synth', dir:'audio-synth/'},
+  video:{tabs:['visuals','loop','mix'], name:'Video Synth', dir:'video-synth/'},
+  mixing:{tabs:['mix','loop','sound','visuals'], name:'Mixing', dir:'mixing/'}};
+const $r=id=>document.getElementById(id);
+const LSg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } }, LSs=(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
+const qv=new URLSearchParams(location.search).get('view');
+const fromPath=(/\/(audio-synth|video-synth|mixing)\/[^/]*$/.exec(location.pathname)||[])[1];
+let view = VIEWS[qv] ? qv : fromPath ? ({'audio-synth':'audio','video-synth':'video',mixing:'mixing'})[fromPath] : 'feedback';
+window.EM_view=view;
+const mobile=document.body.classList.contains('mobile')||/mobile/i.test(location.pathname.split('/').pop());
+const root=location.pathname.replace(/(audio-synth|video-synth|mixing)\/[^/]*$/,'').replace(/[^/]*$/,'');
+const isSite=/\/(audio-synth|video-synth|mixing)\/[^/]*$|\/(desktop|mobile)\.html$/.test(location.pathname);
+
+// ---- the audio view shows what the synth sees, with its score on top ----
+let st=null, sg=null;
+function stageFrame(){
+  if (view!=='audio' || typeof AS==='undefined'){ if (st) st.style.display='none'; return; }
+  const cv=typeof canvas!=='undefined'?canvas:null; if (!cv) return;
+  const W=cv.width, H=cv.height;
+  if (!st){ st=document.createElement('canvas'); st.id='asStage'; sg=st.getContext('2d'); (($r('vxPgm'))||cv).after(st); }
+  if (st.width!==W||st.height!==H){ st.width=W; st.height=H; }
+  const look=Math.max(0,Math.min(1,+AS.S.p.look||0));
+  if (look<1){ try{ AS.drawSource(sg,W,H); }catch(e){ sg.fillStyle='#000'; sg.fillRect(0,0,W,H); } } else { sg.fillStyle='#000'; sg.fillRect(0,0,W,H); }
+  if (look>0){ sg.globalAlpha=look; const p=$r('vxPgm'); try{ sg.drawImage(p&&p.style.display!=='none'?p:cv,0,0,W,H); }catch(e){} sg.globalAlpha=1; }
+  const ov=$r('ovl'); if (ov && window.EM_ovlShown && EM_ovlShown()) try{ sg.drawImage(ov,0,0,W,H); }catch(e){}
+  st.style.display=''; st.style.width=cv.style.width; st.style.height=cv.style.height;
+  const p=$r('vxPgm'); if (p) p.style.visibility='hidden'; cv.style.visibility='hidden';
+}
+const pf=window.EM_postFrame; window.EM_postFrame=(...a)=>{ if (pf) pf(...a); stageFrame(); };
+const rc=window.EM_recCanvas; window.EM_recCanvas=()=>{ if (view==='audio' && st){ stageFrame(); return st; } return rc?rc():canvas; };
+
+// ---- views ----
+function tabBtns(){ return [...document.querySelectorAll('.tabs button[data-tab]')]; }
+function setView(v, first){
+  if (!VIEWS[v]) return; const V=VIEWS[v]; view=v; window.EM_view=v; document.body.dataset.view=v;
+  tabBtns().forEach(b=>{ const i=V.tabs.indexOf(b.dataset.tab); b.style.display=i<0?'none':''; b.style.order=i<0?99:i; });
+  const want=LSg('emrig-tab-'+v); const t=V.tabs.includes(want)?want:V.tabs[0];
+  const tb=document.querySelector('.tabs button[data-tab="'+t+'"]'); if (tb) tb.click();
+  const sp=document.querySelector('#panel h1 span'); if (sp) sp.textContent=V.name;
+  document.title='Electric Mountain '+V.name+(mobile?' · mobile':'');
+  if (!st && v==='audio') stageFrame();
+  if (v!=='audio'){ if (st) st.style.display='none'; const p=$r('vxPgm'); if (p) p.style.visibility=''; if (typeof canvas!=='undefined' && !(p && p.style.display!=='none')) canvas.style.visibility=''; }
+  document.querySelectorAll('#synthSw a').forEach(a=>{ const on=a.dataset.k===v; a.classList.toggle('on',on); if (on) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  LSs('emrig-view',v);
+  if (!first && isSite){ try{ history.replaceState(null,'',root+V.dir+(mobile?'mobile.html':'desktop.html')+location.search.replace(/([?&])view=[^&]*&?/,'$1').replace(/[?&]$/,'')); }catch(e){} }
+}
+window.EM_setView=v=>setView(v);
+function init(){
+  tabBtns().forEach(b=>b.addEventListener('click',()=>LSs('emrig-tab-'+view,b.dataset.tab)));
+  setView(view,true);
+}
+if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(init,0)); else setTimeout(init,0);
 })();
 
 </script>
