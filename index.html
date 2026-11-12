@@ -4,39 +4,96 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Electric Mountain Synths</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:dark;--bg:#0c0d10;--text:#e8e9ec;--dim:#8b909c;--accent:#7cf2c8;--line:#2a2e38;--panel:#15171c}
-html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-main{display:flex;flex-direction:column;gap:14px;padding:32px max(16px,env(safe-area-inset-left));max-width:560px;margin:0 auto;box-sizing:border-box}
-h1{font-size:18px;letter-spacing:.05em;text-transform:uppercase;margin:0}h1 span{color:var(--accent)}
-h2{font-size:15px;margin:0 0 4px}
-p{color:var(--dim);margin:0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+:root{color-scheme:dark;--ink:#111;--paper:#efefe9;--blu:#9cd2e4;--yel:#e4e86c;--grn:#8ddc86;--red:#e5463f;--f:'Barlow Condensed','Arial Narrow','Roboto Condensed',sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#050505;color:var(--paper);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.case{max-width:980px;margin:20px auto;padding:14px;background:#151515 repeating-linear-gradient(90deg,#0000 0 3px,#ffffff04 3px 4px);border:3px solid #000;border-radius:6px;box-shadow:0 0 0 2px #2a2a2a,0 18px 40px #000}
+@media (max-width:640px){.case{margin:0;border-radius:0;border-width:0 0 3px;padding:12px max(12px,env(safe-area-inset-left))}}
+.brand{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;background:var(--blu);color:var(--ink);padding:12px 16px 10px;border-radius:2px;margin-bottom:12px}
+.brand h1{margin:0;font-family:var(--f);font-weight:800;font-size:clamp(28px,6vw,52px);line-height:.9;letter-spacing:.01em;text-transform:uppercase}
+.brand h1 span{font-weight:300}
+.brand .sub{font-family:var(--f);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:clamp(11px,1.8vw,16px);line-height:1.05;text-align:right}
+.intro{font-family:var(--f);text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:#b4b4ac;margin:0 2px 12px}
+.rack{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:760px){.rack{grid-template-columns:1fr}}
+.mod{border-radius:3px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px;color:var(--ink)}
+.mod.k{background:#0d0d0d;color:var(--paper);border:1.5px solid #d9d9d2}
+.mod.y{background:var(--yel)} .mod.b{background:var(--blu)} .mod.g{background:var(--grn)}
+.mod h2{margin:0;font-family:var(--f);font-weight:800;font-size:24px;letter-spacing:.12em;text-transform:uppercase;text-align:center}
+.mod p{margin:0;font-family:var(--f);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:14px;line-height:1.25;text-align:center;min-height:2.5em}
+/* decorative jacks + knob */
+.panel{display:flex;align-items:center;justify-content:space-around;padding:4px 0}
+.jack{display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--f);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.jack i{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle,#000 0 34%,#8d8d86 36% 48%,#d8d8d0 52% 62%,#2a2a2a 66%);box-shadow:0 1px 2px #0008}
+.knob{display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--f);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.knob b{position:relative;width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#f4f4ee 0 30%,#bdbdb4 31% 33%,#1b1b1b 34% 100%);box-shadow:0 3px 6px #000a,inset 0 0 0 2px #2c2c2c;transform:rotate(var(--r,30deg));transition:transform .5s cubic-bezier(.3,1.6,.5,1)}
+.knob b::after{content:'';position:absolute;left:50%;top:5px;width:3px;height:16px;margin-left:-1.5px;background:#f4f4ee;border-radius:2px}
+.mod:hover .knob b{transform:rotate(calc(var(--r,30deg) + 90deg))}
+.ticks{position:absolute}
 .links{display:flex;gap:8px}
-a{flex:1;text-align:center;padding:12px 10px;border:1px solid var(--line);border-radius:10px;color:var(--text);text-decoration:none}
-a.main{background:var(--accent);color:#06261b;border-color:var(--accent);font-weight:600}
+.links a{flex:1;text-align:center;padding:12px 8px;font-family:var(--f);font-weight:700;font-size:17px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;color:#f1f1ea;background:linear-gradient(#2b2b2b,#141414);border:1px solid #000;border-radius:3px;box-shadow:inset 0 1px 0 #ffffff26,0 2px 0 #000}
+.links a:active{transform:translateY(1px)}
+.links a.main{background:radial-gradient(circle at 50% 40%,#f4ffd0,#c9ef8a 70%);color:#111;box-shadow:0 0 12px #d4ff8a99,inset 0 0 0 1px #fff8,0 2px 0 #000}
+/* keyboard strip */
+.keys{position:relative;display:flex;height:92px;margin-top:14px;padding:8px 8px 0;background:#0b0b0b;border-radius:2px;overflow:hidden}
+.keys .wk{flex:1;margin:0 1px;background:linear-gradient(#f6f6f0,#e2e2da);border-radius:0 0 3px 3px;box-shadow:inset 0 -4px 0 #c8c8c0;cursor:pointer}
+.keys .wk.down,.keys .wk:active{background:#d6d6cd;box-shadow:inset 0 -1px 0 #c8c8c0}
+.keys .bk{position:absolute;top:8px;width:calc((100% - 16px)/var(--n)*.6);height:56%;background:linear-gradient(#2a2a2a,#050505);border-radius:0 0 2px 2px;box-shadow:0 2px 2px #000;cursor:pointer;z-index:1}
+.keys .bk.down,.keys .bk:active{background:#3a3a3a}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;font-family:var(--f);text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:#8c8c86}
+.foot .badge{background:var(--red);color:#111;font-weight:800;padding:3px 8px;border-radius:2px}
 </style>
 </head>
 <body>
-<main>
-  <h1>Electric Mountain <span>Synths</span></h1>
-  <p>Three instruments that run in the browser. Nothing is uploaded: your files and camera stay on your device.</p>
-  <section class="card">
-    <div><h2>Feedback Synth</h2><p>Sound and visuals wired into each other, in one loop.</p></div>
-    <div class="links"><a data-k="phone" href="mobile.html?v=20261112a">Phone</a><a data-k="desk" href="desktop.html?v=20261112a">Desktop</a></div>
-  </section>
-  <section class="card">
-    <div><h2>Audio Synth</h2><p>Pictures, video or your camera turned into music.</p></div>
-    <div class="links"><a data-k="phone" href="audio-synth/mobile.html?v=20261112a">Phone</a><a data-k="desk" href="audio-synth/desktop.html?v=20261112a">Desktop</a></div>
-  </section>
-  <section class="card">
-    <div><h2>Video Synth</h2><p>Your track turned into visuals that cut and move with the sound.</p></div>
-    <div class="links"><a data-k="phone" href="video-synth/mobile.html?v=20261112a">Phone</a><a data-k="desk" href="video-synth/desktop.html?v=20261112a">Desktop</a></div>
-  </section>
-</main>
+<div class="case">
+  <header class="brand"><h1>Electric <span>Mountain</span></h1><div class="sub">Audio-visual<br>synthesizers</div></header>
+  <p class="intro">Three instruments that run in the browser. Nothing is uploaded: your files and camera stay on your device.</p>
+  <div class="rack">
+    <section class="mod b">
+      <h2>Feedback</h2>
+      <p>Sound and visuals wired into each other, in one loop.</p>
+      <div class="panel"><span class="jack"><i></i>Sound in</span><span class="knob"><b style="--r:-40deg"></b>Loop</span><span class="jack"><i></i>Video out</span></div>
+      <div class="links"><a data-k="phone" href="mobile.html?v=20261112b">Phone</a><a data-k="desk" href="desktop.html?v=20261112b">Desktop</a></div>
+    </section>
+    <section class="mod y">
+      <h2>Audio</h2>
+      <p>Pictures, video or your camera turned into music.</p>
+      <div class="panel"><span class="jack"><i></i>Picture in</span><span class="knob"><b style="--r:20deg"></b>Score</span><span class="jack"><i></i>Sound out</span></div>
+      <div class="links"><a data-k="phone" href="audio-synth/mobile.html?v=20261112b">Phone</a><a data-k="desk" href="audio-synth/desktop.html?v=20261112b">Desktop</a></div>
+    </section>
+    <section class="mod g">
+      <h2>Video</h2>
+      <p>Your track turned into visuals that cut and move with the sound.</p>
+      <div class="panel"><span class="jack"><i></i>Sound in</span><span class="knob"><b style="--r:70deg"></b>Cut</span><span class="jack"><i></i>Video out</span></div>
+      <div class="links"><a data-k="phone" href="video-synth/mobile.html?v=20261112b">Phone</a><a data-k="desk" href="video-synth/desktop.html?v=20261112b">Desktop</a></div>
+    </section>
+  </div>
+  <div class="keys" id="keys" aria-hidden="true"></div>
+  <div class="foot"><span>Tap the keys</span><span class="badge">Semi-modular · browser</span></div>
+</div>
 <script>
 const phone = matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) < 900;
 document.querySelectorAll('a[data-k="'+(phone?'phone':'desk')+'"]').forEach(a=>a.classList.add('main'));
+// a little playable keyboard: white keys C..C, black keys where they belong
+(function(){
+  const K=document.getElementById('keys'), N=innerWidth<640?15:22, BL=[1,1,0,1,1,1,0]; let ctx=null;
+  K.style.setProperty('--n',N);
+  const midi=[0,2,4,5,7,9,11];
+  const play=m=>{ try{ ctx=ctx||new (window.AudioContext||window.webkitAudioContext)(); ctx.resume();
+      const t=ctx.currentTime, f=440*Math.pow(2,(m-69)/12), o=ctx.createOscillator(), o2=ctx.createOscillator(), lp=ctx.createBiquadFilter(), g=ctx.createGain();
+      o.type='sawtooth'; o2.type='square'; o.frequency.value=f; o2.frequency.value=f*0.5; o2.detune.value=7;
+      lp.type='lowpass'; lp.Q.value=8; lp.frequency.setValueAtTime(f*8,t); lp.frequency.exponentialRampToValueAtTime(f*1.2,t+.5);
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.18,t+.01); g.gain.exponentialRampToValueAtTime(.001,t+.9);
+      o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(ctx.destination); o.start(t); o2.start(t); o.stop(t+1); o2.stop(t+1); }catch(e){} };
+  const press=(el,m)=>{ el.classList.add('down'); play(m); setTimeout(()=>el.classList.remove('down'),180); };
+  for (let i=0;i<N;i++){ const w=document.createElement('div'); w.className='wk'; const m=48+12*Math.floor(i/7)+midi[i%7];
+    w.addEventListener('pointerdown',e=>{e.preventDefault(); press(w,m);}); K.appendChild(w);
+    if (BL[i%7] && i<N-1){ const b=document.createElement('div'); b.className='bk'; b.style.left='calc(8px + (100% - 16px)/'+N+'*'+(i+1)+' - (100% - 16px)/'+N+'*.3)';
+      b.addEventListener('pointerdown',e=>{e.preventDefault(); press(b,m+1);}); K.appendChild(b); } }
+})();
 </script>
 </body>
 </html>
