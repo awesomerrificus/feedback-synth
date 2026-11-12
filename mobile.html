@@ -665,17 +665,35 @@ input[type=range]:focus{outline:none} input[type=range]:focus-visible::-webkit-s
       <div class="small" style="color:var(--dim)">Renders every frame exactly, not in real time, and writes an MP4 with your track's audio. It uses the same settings, pool and mappings as above. The synth plays live, so offline renders use the loaded track only: to capture the feedback loop, use Record video.</div>
       <div class="row"><label class="small" style="width:70px">Resolution</label>
         <select id="rSize">
+          <optgroup label="Quick preview (fastest)">
+          <option value="640x360">16:9 · 640×360</option>
+          <option value="854x480">16:9 · 854×480</option>
+          <option value="360x640">9:16 · 360×640</option>
+          <option value="540x960">9:16 · 540×960</option>
+          <option value="480x480">1:1 · 480×480</option>
+          </optgroup>
+          <optgroup label="HD (fast)">
+          <option value="1280x720" selected>16:9 · 1280×720</option>
+          <option value="720x1280">9:16 · 720×1280</option>
+          <option value="720x720">1:1 · 720×720</option>
+          <option value="864x1080">4:5 · 864×1080</option>
+          </optgroup>
+          <optgroup label="Full HD (about 2× slower)">
           <option value="1920x1080">16:9 · 1920×1080</option>
-          <option value="3840x2160">16:9 · 3840×2160 (4K)</option>
-          <option value="1280x720">16:9 · 1280×720</option>
           <option value="1080x1920">9:16 · 1080×1920</option>
-          <option value="2160x3840">9:16 · 2160×3840 (4K)</option>
           <option value="1080x1080">1:1 · 1080×1080</option>
-          <option value="2160x2160">1:1 · 2160×2160</option>
           <option value="1080x1350">4:5 · 1080×1350</option>
+          </optgroup>
+          <optgroup label="4K (about 8× slower)">
+          <option value="3840x2160">16:9 · 3840×2160</option>
+          <option value="2160x3840">9:16 · 2160×3840</option>
+          <option value="2160x2160">1:1 · 2160×2160</option>
+          </optgroup>
         </select></div>
+      <div class="row"><label class="small" style="width:70px">File name</label>
+        <input id="rName" type="text" placeholder="name of the video" style="flex:1;min-width:0;background:#0f1115;color:var(--text);border:1px solid #363b47;border-radius:5px;padding:4px 6px;font:inherit"></div>
       <div class="row"><label class="small" style="width:70px">Frame rate</label>
-        <select id="rFps"><option>24</option><option selected>30</option><option>60</option></select>
+        <select id="rFps"><option>24</option><option selected>30</option><option value="60">60 (2× slower)</option></select>
         <label class="small">Quality</label>
         <select id="rQual"><option value="0.1">Good</option><option value="0.18" selected>High</option><option value="0.3">Max</option></select></div>
       <div class="row"><label class="small" style="width:70px">Range (s)</label>
@@ -686,6 +704,7 @@ input[type=range]:focus{outline:none} input[type=range]:focus-visible::-webkit-s
       <div class="row"><button id="renderBtn" class="primary">Render MP4</button><button id="renderCancel" disabled>Cancel</button></div>
       <div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden"><div id="rBar" style="height:100%;width:0;background:var(--accent)"></div></div>
       <div id="rInfo" class="small" style="color:var(--dim);margin-top:4px"></div>
+      <div id="rWhere" class="small" style="color:var(--dim);margin-top:4px"></div>
     </div>
 
     <h2>Help</h2>
@@ -3539,6 +3558,7 @@ async function pickAudioCodec(ch){
   }
   return null;
 }
+(function(){ const w=document.getElementById('rWhere'); if (w) w.textContent=window.showSaveFilePicker?'When you press Render you choose where to save first; the video is written there as it renders.':'This browser saves the finished video to your Downloads folder (Chrome or Edge can ask where to save).'; })();
 async function renderOffline(){
   const info=$('rInfo'), bar=$('rBar');
   if (!window.VideoEncoder || !window.AudioEncoder){ info.textContent='Offline rendering needs Chrome or Edge (version 94+), or Safari 17+.'; return; }
@@ -3546,13 +3566,14 @@ async function renderOffline(){
   const [W,H]=$('rSize').value.split('x').map(Number), fps=+$('rFps').value, bpp=+$('rQual').value;
   const bitrate=Math.min(120e6, Math.round(W*H*fps*bpp));
   const base=trackFile.name.replace(/\.[^.]+$/,'').replace(/[^\w\- ]+/g,'').trim()||'visuals';
-  const fname=`${base} - visuals ${W}x${H} ${fps}fps.mp4`;
+  const nm=($('rName').value||'').replace(/\.mp4$/i,'').replace(/[\\/:*?"<>|]+/g,'').trim();
+  const fname=(nm||`${base} - visuals ${W}x${H} ${fps}fps`)+'.mp4';
   // ask where to save first (needs the click), stream straight to disk when the browser allows it
   let writable=null;
   if (window.showSaveFilePicker){
     try{ const fh=await showSaveFilePicker({suggestedName:fname, types:[{description:'MP4 video', accept:{'video/mp4':['.mp4']}}]}); writable=await fh.createWritable(); }
     catch(e){ if (e.name==='AbortError'){ info.textContent='Render cancelled.'; return; } }
-  }
+  } else if (!confirm('This browser cannot ask where to save. The video will go to your Downloads folder as\n"'+fname+'"\nwhen the render finishes. Start rendering?')){ info.textContent='Render cancelled.'; return; }
   OFF=true; rCancel=false; $('renderBtn').disabled=true; $('renderCancel').disabled=false; $('recBtn').disabled=true;
   player.pause(); if (usingMic) stopMic(); for (const m of pool) if (m.type==='video') m.el.pause();
   const oldSize=[canvas.width,canvas.height];
