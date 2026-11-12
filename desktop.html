@@ -118,6 +118,92 @@ button.on{border-color:var(--accent);color:var(--accent)}
 #look{flex:1}
 .ends{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:-2px}
 </style>
+<!--vt-->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style id="vintage">
+/* ---- vintage synth faceplate theme ---- */
+:root{
+  --bg:#0a0a0a; --panel:#141414; --panel2:#0d0d0d; --line:#3b3b3b; --text:#efefe9; --dim:#b4b4ac;
+  --accent:#ff8a3d; --accent2:#e5463f; --warn:#ffd23f;
+  --vt-yel:#e4e86c; --vt-blu:#9cd2e4; --vt-grn:#8ddc86; --vt-red:#e5463f; --vt-ink:#111;
+  --vt-cap:linear-gradient(90deg,#e9e9e1 0 44%,#151515 44% 56%,#e9e9e1 56%);
+  --vt-font:'Barlow Condensed','Arial Narrow','Roboto Condensed',sans-serif;
+}
+html,body{background:#050505}
+#panel{background:#151515 repeating-linear-gradient(90deg,#0000 0 3px,#ffffff03 3px 4px);border-right:3px solid #000}
+#panel h1{font-family:var(--vt-font);font-weight:800;font-size:22px;letter-spacing:.02em;line-height:1;background:var(--vt-blu);color:var(--vt-ink);padding:9px 10px 7px;margin:0 0 12px;border-radius:2px;box-shadow:inset 0 0 0 2px #0002}
+#panel h1 span{color:var(--vt-ink);font-weight:300}
+#panel h2{font-family:var(--vt-font);font-weight:700;font-size:14px;letter-spacing:.14em;color:#f2f2ec;text-align:center;margin:14px 0 0;padding:7px 10px 3px;background:var(--vt-face,#0d0d0d);border-radius:3px 3px 0 0;border:1.5px solid var(--vt-rule,#d9d9d2);border-bottom:0}
+#panel h2+.sec,#panel h2+details.sec{border-top:0;border-radius:0 0 3px 3px;margin-top:0}
+.sec{background:var(--vt-face,#0d0d0d);border:1.5px solid var(--vt-rule,#d9d9d2);border-radius:3px;color:var(--vt-txt,var(--text))}
+/* coloured faceplates */
+.vt-yel{--vt-face:var(--vt-yel)} .vt-blu{--vt-face:var(--vt-blu)} .vt-grn{--vt-face:var(--vt-grn)} .vt-red{--vt-face:var(--vt-red)}
+.vt-yel,.vt-blu,.vt-grn,.vt-red{--vt-rule:transparent;--vt-txt:#111;--dim:#2d2d2a;--text:#111;--line:#0003}
+#panel h2.vt-yel,#panel h2.vt-blu,#panel h2.vt-grn,#panel h2.vt-red{color:#111}
+.vt-red{--dim:#2a0b09}
+/* silkscreen labels */
+label.small.vt-lab,.small.vt-lab,.fxgrid label,.vsmgrid label,.map .name,.map .sl span,details summary,.modhead,.modhead .sub{font-family:var(--vt-font);text-transform:uppercase;letter-spacing:.07em}
+.fxgrid label,.vsmgrid label,.vt-lab{font-size:12px;font-weight:600}
+.small:not(.vt-lab),label.small:not(.vt-lab){letter-spacing:.01em}
+.map .name{font-size:13px;font-weight:700}
+details.mod2 summary{font-family:var(--vt-font);font-weight:700;letter-spacing:.12em;color:var(--vt-txt,var(--text))}
+.help p{font-family:inherit;text-transform:none;color:var(--vt-txt,#d5d5cf)}
+/* buttons: black rubber keys; primary = lit pad */
+button,.btn{font-family:var(--vt-font);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.08em;background:linear-gradient(#2b2b2b,#141414);color:#f1f1ea;border:1px solid #000;border-radius:3px;box-shadow:inset 0 1px 0 #ffffff26,0 2px 0 #000}
+button:hover,.btn:hover{border-color:#000;filter:brightness(1.25)}
+button:active,.btn:active{transform:translateY(1px);box-shadow:inset 0 1px 0 #ffffff14,0 1px 0 #000}
+button.primary,.btn.primary{background:radial-gradient(circle at 50% 40%,#f4ffd0,#c9ef8a 70%);color:#111;border-color:#000;box-shadow:0 0 10px #d4ff8a88,inset 0 0 0 1px #fff8,0 2px 0 #000}
+button.on{color:#ffb070;border-color:#000;box-shadow:0 0 8px #ff8a3d88,inset 0 0 0 1px #ff8a3d,0 2px 0 #000}
+button.rec{background:linear-gradient(#5a1b18,#2c0b0a)}
+button.rec.on,.recbtn.rec{background:radial-gradient(circle at 50% 40%,#ffb08c,#ff5a2e 70%);color:#160300;box-shadow:0 0 14px #ff5a2ecc,0 2px 0 #000}
+/* selects and number boxes: black windows */
+select,input[type=number]{background:#080808;color:#f3f3ec;border:1px solid #000;border-radius:2px;box-shadow:inset 0 1px 3px #000,0 0 0 1px #ffffff1a;font-family:var(--vt-font);font-weight:600;letter-spacing:.04em}
+input[type=checkbox]{accent-color:#ff8a3d}
+.vt-yel input[type=checkbox],.vt-blu input[type=checkbox],.vt-grn input[type=checkbox],.vt-red input[type=checkbox]{accent-color:#111}
+/* sliders: fader with a cream cap */
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:24px;padding:0;margin:2px 0}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:#4a4a46;border-radius:1px;box-shadow:inset 0 1px 1px #000}
+input[type=range]::-moz-range-track{height:4px;background:#4a4a46;border-radius:1px}
+.vt-yel input[type=range]::-moz-range-track,.vt-blu input[type=range]::-moz-range-track,.vt-grn input[type=range]::-moz-range-track,.vt-red input[type=range]::-moz-range-track{background:#111}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:22px;margin-top:-9px;background:var(--vt-cap);border:1px solid #000;border-radius:2px;box-shadow:0 2px 2px #0009}
+input[type=range]::-moz-range-thumb{width:12px;height:21px;background:var(--vt-cap);border:1px solid #000;border-radius:2px;box-shadow:0 2px 2px #0009}
+input[type=range]:focus{outline:none} input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px #ff8a3d}
+.vt-yel input[type=range]::-webkit-slider-runnable-track,.vt-blu input[type=range]::-webkit-slider-runnable-track,.vt-grn input[type=range]::-webkit-slider-runnable-track,.vt-red input[type=range]::-webkit-slider-runnable-track{background:#111;box-shadow:none}
+@media (pointer:coarse){
+  input[type=range]{height:38px}
+  input[type=range]::-webkit-slider-thumb{width:20px;height:32px;margin-top:-14px}
+  #panel h1{font-size:19px}
+}
+/* meters, canvases and live bars */
+#meters,canvas.wave,.map .live{border-radius:2px}
+.map .live{background:#0005}
+.map .live i{background:#ff8a3d}
+.map{border-color:var(--line)}
+.thumb{border-radius:2px}
+/* tabs (combined + mobile) */
+.tabs button{border-radius:2px}
+.tabs button.on,.tabs button.active{background:radial-gradient(circle at 50% 40%,#f4ffd0,#c9ef8a 70%);color:#111}
+#mbar button.primary{background:radial-gradient(circle at 50% 40%,#f4ffd0,#c9ef8a 70%);color:#111}
+#mbar button.on{color:#ffb070;border-color:#ff8a3d}
+#mtoast{border-color:#ff8a3d;border-radius:3px}
+#panel h2.m-fold{padding:8px 12px 4px;margin-top:14px}
+#panel h2.m-fold.m-closed{border-bottom:1.5px solid var(--vt-rule,#d9d9d2);border-radius:3px}
+</style>
+<script>
+// vintage faceplates: colour some panels like a 70s synth, h2 headers take their panel's colour
+(function(){ if (window.__vt) return; window.__vt=1;
+  const CYC=['vt-blu','','vt-yel','','vt-grn','','','vt-red',''];
+  const paint=()=>{ const groups=new Map();
+    document.querySelectorAll('.sec').forEach(s=>{ if (s.parentElement.closest('.sec')||s.dataset.vt) return; const p=s.parentElement; const i=groups.get(p)||0; groups.set(p,i+1);
+      const c=CYC[i%CYC.length]; s.dataset.vt=c||'blk'; if (c) s.classList.add(c);
+      const h=s.previousElementSibling; if (h&&h.tagName==='H2'&&c) h.classList.add(c); });
+    document.querySelectorAll('.small,label.small').forEach(e=>{ if (!e.dataset.vtl){ e.dataset.vtl=1; if (e.textContent.trim().length<=34) e.classList.add('vt-lab'); } }); };
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',paint); else paint();
+  setTimeout(paint,500);
+})();
+</script>
+<!--/vt-->
 </head>
 <body>
 <div id="app">
@@ -4327,6 +4413,200 @@ window.__emvs = {S, A, pool, L, cut};
 </script>
 <script>
 
+// vintage faceplates: colour some panels like a 70s synth, h2 headers take their panel's colour
+(function(){ if (window.__vt) return; window.__vt=1;
+  const CYC=['vt-blu','','vt-yel','','vt-grn','','','vt-red',''];
+  const paint=()=>{ const groups=new Map();
+    ROOT.querySelectorAll('.sec').forEach(s=>{ if (s.parentElement.closest('.sec')||s.dataset.vt) return; const p=s.parentElement; const i=groups.get(p)||0; groups.set(p,i+1);
+      const c=CYC[i%CYC.length]; s.dataset.vt=c||'blk'; if (c) s.classList.add(c);
+      const h=s.previousElementSibling; if (h&&h.tagName==='H2'&&c) h.classList.add(c); });
+    ROOT.querySelectorAll('.small,label.small').forEach(e=>{ if (!e.dataset.vtl){ e.dataset.vtl=1; if (e.textContent.trim().length<=34) e.classList.add('vt-lab'); } }); };
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',paint); else paint();
+  setTimeout(paint,500);
+})();
+</script>
+<!--/vt-->
+</head>
+<body>
+<div id="app">
+  <aside id="panel">
+    <h1>Electric Mountain <span>Audio Synth</span></h1>
+    <div class="row"><button id="startBtn" class="primary" title="Space">▶ Start sound</button><span id="clock" class="small" style="margin-left:auto"></span></div>
+
+    <h2>1 · Visual input</h2>
+    <div class="sec">
+      <div class="row">
+        <label class="btn primary">Load image / video<input id="mediaFile" type="file" accept="image/*,video/*"></label>
+        <button id="camBtn" title="C">Webcam</button>
+      </div>
+      <div class="row"><select id="demoSel" style="flex:1;min-width:0"></select></div>
+      <div id="srcName"></div>
+      <div class="row" id="vidRow" style="display:none"><button id="vidPlay">⏸ Pause video</button>
+        <label class="small">Speed <select id="vidRate"><option>0.25</option><option>0.5</option><option selected>1</option><option>1.5</option><option>2</option></select></label></div>
+      <canvas id="meters" width="600" height="236"></canvas>
+      <div class="row"><label class="small" style="flex:1">Response (fast ↔ smooth)<input data-k="response" type="range" min="0" max="1" step="0.01"></label>
+        <label class="small"><input data-k="ovl" type="checkbox"> Show score</label></div>
+    </div>
+
+    <h2>2 · Music</h2>
+    <div class="sec">
+      <div class="row"><label class="small">Key <select data-k="key" id="keySel"></select></label>
+        <label class="small">Scale <select data-k="scale" id="scaleSel"></select></label></div>
+      <div class="row"><label class="small"><input data-k="autoKey" type="checkbox"> Key follows colour</label>
+        <label class="small">Octave <select data-k="octave"><option value="-2">-2</option><option value="-1">-1</option><option value="0">0</option><option value="1">+1</option><option value="2">+2</option></select></label></div>
+      <div class="row"><label class="small">Tempo <input data-k="bpm" type="number" min="30" max="240" step="1"></label><button id="tapBtn" title="T">Tap</button>
+        <label class="small" style="flex:1">Swing<input data-k="swing" type="range" min="0" max="0.6" step="0.01"></label></div>
+      <div class="row"><label class="small">Steps <select data-k="steps"><option>8</option><option>12</option><option>16</option><option>24</option><option>32</option></select></label>
+        <label class="small">Scan <select data-k="scan"><option value="lr">Left → right</option><option value="rl">Right → left</option><option value="pp">Ping-pong</option><option value="tb">Top → bottom</option></select></label></div>
+      <div class="row"><label class="small">Chords from <select data-k="chordFrom"><option value="hue">Colour (hue)</option><option value="cy">Where the light is</option><option value="bright">Brightness</option><option value="cycle">Cycle i–VI–iv–v</option></select></label></div>
+    </div>
+
+    <h2>3 · Voices</h2>
+    <div class="sec mod" data-mod="arp">
+      <div class="modhead"><label><input data-k="arp.on" type="checkbox"> Image score</label><span class="sub">bright spots on the scan line → notes</span></div>
+      <div class="fxgrid">
+        <label>Sound<select data-k="arp.wave"><option value="triangle">Soft (triangle)</option><option value="square">Hollow (square)</option><option value="sawtooth">Bright (saw)</option><option value="sine">Pure (sine)</option><option value="fm">Bell (FM)</option><option value="pluck">Pluck</option></select></label>
+        <label>Notes at once<input data-k="arp.poly" type="range" min="1" max="6" step="1"></label>
+        <label>Pitch rows<input data-k="arp.rows" type="range" min="6" max="24" step="1"></label>
+        <label>Register<select data-k="arp.oct"><option value="-1">Low</option><option value="0">Mid</option><option value="1">High</option></select></label>
+      </div>
+      <div class="maps"></div>
+    </div>
+    <div class="sec mod" data-mod="pad">
+      <div class="modhead"><label><input data-k="pad.on" type="checkbox"> Pad</label><span class="sub">chords that follow the picture</span></div>
+      <div class="fxgrid">
+        <label>Sound<select data-k="pad.wave"><option value="sawtooth">Warm (saw)</option><option value="square">Reed (square)</option><option value="triangle">Soft (triangle)</option><option value="sine">Pure (sine)</option></select></label>
+        <label>Glide<input data-k="pad.glide" type="range" min="0" max="1" step="0.01"></label>
+        <label class="chk"><input data-k="pad.sev" type="checkbox"> 7th chords</label>
+      </div>
+      <div class="maps"></div>
+    </div>
+    <div class="sec mod" data-mod="spec">
+      <div class="modhead"><label><input data-k="spec.on" type="checkbox"> Spectral scanner</label><span class="sub">the scan line played as a spectrum</span></div>
+      <div class="fxgrid">
+        <label>Tuning<select data-k="spec.tuning"><option value="scale">In key</option><option value="harm">Harmonics</option><option value="free">Free (glassy)</option></select></label>
+        <label>Partials<input data-k="spec.n" type="range" min="8" max="48" step="1"></label>
+      </div>
+      <div class="maps"></div>
+    </div>
+    <div class="sec mod" data-mod="drum">
+      <div class="modhead"><label><input data-k="drum.on" type="checkbox"> Drums</label><span class="sub">texture and movement → hits</span></div>
+      <div class="fxgrid">
+        <label class="chk"><input data-k="drum.anchor" type="checkbox"> Steady backbeat</label>
+        <label class="chk"><input data-k="drum.motion" type="checkbox"> Movement hits</label>
+        <label>Tune<input data-k="drum.tune" type="range" min="0" max="1" step="0.01"></label>
+        <label>Kit<select data-k="drum.kit"><option value="analog">Analog</option><option value="tight">Tight</option><option value="boom">Boom</option></select></label>
+      </div>
+      <div class="maps"></div>
+    </div>
+    <div class="sec mod" data-mod="smp">
+      <div class="modhead"><label><input data-k="smp.on" type="checkbox"> Sampler</label><span class="sub">your audio, cut at its hits, played by the picture</span></div>
+      <div class="row"><label class="btn primary">Load audio<input id="smpFile" type="file" accept="audio/*,video/*,.mp3,.m4a,.aac,.wav,.aif,.aiff,.caf,.flac,.ogg,.opus,.mp4,.mov"></label><button class="recbtn" id="smpRec" title="Record from the microphone, then it gets sliced like a loaded file">● Record</button><input id="smpCap" type="file" accept="video/*" capture="user" style="display:none"><button id="smpClear" title="Unload this audio">Unload</button><label class="chk small"><input data-k="smp.mute" type="checkbox"> Mute</label><span id="smpName" class="small" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No audio loaded</span></div>
+      <canvas id="smpWave" width="600" height="90" title="Tap a slice to hear it" style="width:100%;height:64px;display:block;background:#0f1115;border:1px solid var(--line);border-radius:5px;cursor:pointer"></canvas>
+      <div class="fxgrid">
+        <label>Volume<input data-k="smp.vol" type="range" min="0" max="1.5" step="0.01"></label>
+        <label>Slice sensitivity<input data-k="smp.sens" type="range" min="0" max="1" step="0.01"></label>
+        <label>Max slices<select data-k="smp.max"><option value="8">8</option><option value="16">16</option><option value="32">32</option><option value="64">64</option></select></label>
+        <label>Played by<select data-k="smp.mode"><option value="pads">Motion pads (grid)</option><option value="scan">Scan line (bright spots)</option><option value="hits">Movement hits (where)</option><option value="seq">In order, on the beat</option></select></label>
+        <label>Pad grid<select data-k="smp.grid"><option value="2">2 × 2</option><option value="3">3 × 3</option><option value="4">4 × 4</option></select></label>
+        <label class="chk"><input data-k="smp.quant" type="checkbox"> Snap to the beat</label>
+        <label class="chk"><input data-k="smp.choke" type="checkbox"> One slice at a time</label>
+      </div>
+      <div class="maps"></div>
+    </div>
+    <div class="sec mod" data-mod="smp2" data-slot="2">
+      <div class="modhead"><label><input data-k="smp2.on" type="checkbox"> Sampler 2</label><span class="sub">a second set of slices, with its own audio</span><button class="smpDel" data-del="2" title="Remove this sampler">Remove</button></div>
+      <div class="row"><label class="btn primary">Load audio<input id="smp2File" type="file" accept="audio/*,video/*,.mp3,.m4a,.aac,.wav,.aif,.aiff,.caf,.flac,.ogg,.opus,.mp4,.mov"></label><button class="recbtn" id="smp2Rec" title="Record from the microphone, then it gets sliced like a loaded file">● Record</button><input id="smp2Cap" type="file" accept="video/*" capture="user" style="display:none"><button id="smp2Clear" title="Unload this audio">Unload</button><label class="chk small"><input data-k="smp2.mute" type="checkbox"> Mute</label><span id="smp2Name" class="small" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No audio loaded</span></div>
+      <canvas id="smp2Wave" width="600" height="90" title="Tap a slice to hear it" style="width:100%;height:64px;display:block;background:#0f1115;border:1px solid var(--line);border-radius:5px;cursor:pointer"></canvas>
+      <div class="fxgrid">
+        <label>Volume<input data-k="smp2.vol" type="range" min="0" max="1.5" step="0.01"></label>
+        <label>Slice sensitivity<input data-k="smp2.sens" type="range" min="0" max="1" step="0.01"></label>
+        <label>Max slices<select data-k="smp2.max"><option value="8">8</option><option value="16">16</option><option value="32">32</option><option value="64">64</option></select></label>
+        <label>Played by<select data-k="smp2.mode"><option value="pads">Motion pads (grid)</option><option value="scan">Scan line (bright spots)</option><option value="hits">Movement hits (where)</option><option value="seq">In order, on the beat</option></select></label>
+        <label>Pad grid<select data-k="smp2.grid"><option value="2">2 × 2</option><option value="3">3 × 3</option><option value="4">4 × 4</option></select></label>
+        <label class="chk"><input data-k="smp2.quant" type="checkbox"> Snap to the beat</label>
+        <label class="chk"><input data-k="smp2.choke" type="checkbox"> One slice at a time</label>
+      </div>
+      <div class="maps"></div>
+    </div>
+    <div class="sec mod" data-mod="smp3" data-slot="3">
+      <div class="modhead"><label><input data-k="smp3.on" type="checkbox"> Sampler 3</label><span class="sub">a third set of slices, with its own audio</span><button class="smpDel" data-del="3" title="Remove this sampler">Remove</button></div>
+      <div class="row"><label class="btn primary">Load audio<input id="smp3File" type="file" accept="audio/*,video/*,.mp3,.m4a,.aac,.wav,.aif,.aiff,.caf,.flac,.ogg,.opus,.mp4,.mov"></label><button class="recbtn" id="smp3Rec" title="Record from the microphone, then it gets sliced like a loaded file">● Record</button><input id="smp3Cap" type="file" accept="video/*" capture="user" style="display:none"><button id="smp3Clear" title="Unload this audio">Unload</button><label class="chk small"><input data-k="smp3.mute" type="checkbox"> Mute</label><span id="smp3Name" class="small" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No audio loaded</span></div>
+      <canvas id="smp3Wave" width="600" height="90" title="Tap a slice to hear it" style="width:100%;height:64px;display:block;background:#0f1115;border:1px solid var(--line);border-radius:5px;cursor:pointer"></canvas>
+      <div class="fxgrid">
+        <label>Volume<input data-k="smp3.vol" type="range" min="0" max="1.5" step="0.01"></label>
+        <label>Slice sensitivity<input data-k="smp3.sens" type="range" min="0" max="1" step="0.01"></label>
+        <label>Max slices<select data-k="smp3.max"><option value="8">8</option><option value="16">16</option><option value="32">32</option><option value="64">64</option></select></label>
+        <label>Played by<select data-k="smp3.mode"><option value="pads">Motion pads (grid)</option><option value="scan">Scan line (bright spots)</option><option value="hits">Movement hits (where)</option><option value="seq">In order, on the beat</option></select></label>
+        <label>Pad grid<select data-k="smp3.grid"><option value="2">2 × 2</option><option value="3">3 × 3</option><option value="4">4 × 4</option></select></label>
+        <label class="chk"><input data-k="smp3.quant" type="checkbox"> Snap to the beat</label>
+        <label class="chk"><input data-k="smp3.choke" type="checkbox"> One slice at a time</label>
+      </div>
+      <div class="maps"></div>
+    </div>
+    <div class="row" id="smpAddRow"><button id="smpAdd" title="Add another sampler with its own audio (up to 3)">＋ Add sampler</button><span class="small">up to 3, each with its own audio or mic take</span></div>
+    <div class="sec mod" data-mod="noise">
+      <div class="modhead"><label><input data-k="noise.on" type="checkbox"> Texture</label><span class="sub">filtered noise from detail</span></div>
+      <div class="maps"></div>
+    </div>
+
+    <h2>4 · Effects</h2>
+    <div class="sec mod" data-mod="fx">
+      <div class="fxgrid">
+        <label>Delay time<select data-k="fx.dtime"><option value="0.5">1/8</option><option value="0.75">3/16 (dotted)</option><option value="1">1/4</option><option value="1.5">3/8 (dotted)</option><option value="2">1/2</option></select></label>
+        <label>Master volume<input data-k="master" type="range" min="0" max="1" step="0.01"></label>
+      </div>
+      <div class="maps"></div>
+    </div>
+
+    <h2>5 · Scenes</h2>
+    <div class="sec">
+      <div class="row"><select id="preset" style="flex:1"></select><button id="randBtn" title="R">Randomize</button></div>
+      <div class="row"><button id="saveScene" title="S">Save scene</button><button id="delScene">Delete</button><button id="exportScenes" title="Save all your scenes to a file">Export</button><label class="btn" title="Load scenes from a file">Import<input id="importScenes" type="file" accept=".json,application/json"></label></div>
+      <div id="sceneInfo" class="small"></div>
+      <div class="row" id="sceneBtns"></div>
+    </div>
+
+    <h2>6 · Record &amp; MIDI</h2>
+    <div class="sec">
+      <div class="row"><button id="recWav" class="rec" title="W">● Record WAV</button><button id="recClip" class="rec" title="V">● Record clip</button></div>
+      <div class="row"><label class="small">Clip size <select data-k="outSize">
+          <option value="screen">Match screen</option>
+          <option value="1080x1080">1080×1080 square (feed)</option>
+          <option value="1080x1350">1080×1350 portrait 4:5 (Instagram)</option>
+          <option value="1080x1920">1080×1920 vertical 9:16 (Reels, TikTok, Shorts)</option>
+          <option value="1920x1080">1920×1080 landscape HD (YouTube)</option>
+          <option value="3840x2160">3840×2160 landscape 4K</option></select></label></div>
+      <div class="row"><label class="small">Picture <select data-k="outFit"><option value="fill">Fill frame (crop edges)</option><option value="fit">Fit whole picture (black bars)</option></select></label>
+        <label class="small">Frame rate <select data-k="outFps"><option value="30">30 fps</option><option value="60">60 fps</option></select></label></div>
+      <div id="recInfo" class="small">WAV is 24-bit stereo audio. Clip is the picture with its score overlay plus the sound, as a video for socials.</div>
+      <div class="row"><button id="midiBtn">Enable MIDI out</button><select id="midiOut" style="flex:1;min-width:0;display:none"></select></div>
+      <div id="midiInfo" class="small">Sends the score to your DAW or hardware: notes on ch 1, pad chords on ch 2, drums on ch 10.</div>
+    </div>
+
+    <h2>Help</h2>
+    <details class="help"><summary>How it works &amp; shortcuts</summary>
+      <p>Load an image or video, or turn on the webcam, then press Start. A scan line sweeps across the picture in time with the tempo, like a playhead over a graphic score.</p>
+      <p><b>Image score</b>: each step of the scan, the brightest spots in that slice of the picture become notes. Higher in the frame is higher in pitch, and everything is kept in your key and scale. <b>Pad</b> holds chords that change each bar, picked from the picture's colour (or where the light sits). <b>Spectral scanner</b> plays the whole scan line at once as a spectrum, the way early optical synths read drawn sound. <b>Drums</b> come from texture along the scan line (bottom of the frame → kick, middle → snare, top → hats) and from movement: wave at the webcam to play hits. <b>Texture</b> is filtered noise that follows the detail in the picture.</p>
+      <p>Each mapping picks one picture feature: <b>brightness</b>, <b>darkness</b>, <b>contrast</b>, <b>colour</b> (saturation), <b>hue</b>, <b>red / green / blue</b>, <b>detail</b> (edges), <b>motion</b>, where the light is (<b>light X / Y</b>), where the movement is (<b>motion X / Y</b>), the brightness under the <b>scan line</b>, or a slow LFO. <i>Base</i> is the resting value, <i>amount</i> is how far the picture pushes it (left of centre pushes the other way).</p>
+      <p><b>Sampler</b> (each has Volume, Mute and Unload, which empties it; use <i>＋ Add sampler</i> for up to three, each with its own audio, mode and mappings; how many are open is saved with scenes, the audio itself is not): load any audio (a loop, a beat, a field recording), or tap <i>● Record</i> to capture a take (on a computer it records the microphone in the page, tap Stop when done, silence at the ends is trimmed; on a phone it opens the camera app, which records sound reliably, and the sound of that clip is sliced), and it is cut at its hits, like a beat-slicing sampler. Slice sensitivity and Max slices set how many pieces you get; tap the waveform to hear a slice. Then the picture plays them: <i>Motion pads</i> splits the frame into a grid and movement in a square fires its slice (great with the camera); <i>Scan line</i> plays the slice picked by the brightest spot as the line sweeps; <i>Movement hits</i> fires on sudden movement, left-to-right picks the slice; <i>In order</i> plays the slices back on the beat, and movement makes it stutter. Snap to the beat keeps it in time. The audio file is not saved with scenes: load it again next time. MIDI: slices go out on channel 11 from note 36.</p>
+      <p><b>Scenes</b> store every sound setting. They're kept in this browser; Export saves them to a file you can back up or Import elsewhere.</p>
+      <p><span class="kbd">Space</span> start/stop · <span class="kbd">C</span> webcam · <span class="kbd">R</span> randomize · <span class="kbd">S</span> save scene · <span class="kbd">1</span>–<span class="kbd">9</span> scenes · <span class="kbd">T</span> tap tempo · <span class="kbd">W</span> record WAV · <span class="kbd">V</span> record clip · <span class="kbd">H</span> hide panel · <span class="kbd">F</span> fullscreen</p>
+      <p>Everything runs on your computer; files and the camera never leave it.</p>
+    </details>
+  </aside>
+
+  <main id="stage">
+    <canvas id="out"></canvas>
+    <button id="bigStart" class="primary">▶ Start sound</button>
+    <div id="status"></div>
+    <div id="hint">Drop an image or video here · C for webcam · Space to start</div>
+    <div id="drop">Drop an image or video</div>
+  </main>
+</div>
+<video id="vid" playsinline muted loop style="display:none"></video>
+
+<script>
 const AS=(function(){
 "use strict";
 const ROOT=document.getElementById('tab-sound');
