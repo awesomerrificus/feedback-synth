@@ -147,6 +147,173 @@ input[type=range]:focus{outline:none} input[type=range]:focus-visible::-webkit-s
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',paint); else paint();
   setTimeout(paint,500);
 })();
+
+// ---- guided tours: spotlight + card, can be ended any time ----
+(function(){ if (window.__emTour) return; window.__emTour=1;
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const css=`
+#tourBtn{position:relative;margin:0 0 10px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
+#tourBtn b{display:inline-flex;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;background:#ff8a3d;color:#111;font-size:13px;box-shadow:0 0 8px #ff8a3d99}
+#tourSpot{position:fixed;z-index:1000;pointer-events:none;border-radius:4px;box-shadow:0 0 0 3px #ff8a3d,0 0 18px 4px #ff8a3daa,0 0 0 9999px rgba(0,0,0,.58);transition:all .25s ease;display:none}
+#tourDim{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.58);display:none;pointer-events:none}
+#tourCard{position:fixed;z-index:1001;width:min(360px,calc(100vw - 24px));background:#0d0d0d;color:#efefe9;border:1.5px solid #d9d9d2;border-radius:4px;box-shadow:0 0 0 3px #000,0 14px 40px #000c;display:none;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+#tourCard .th{display:flex;align-items:center;gap:8px;padding:8px 10px 6px;background:var(--tc,#9cd2e4);color:#111;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:15px}
+#tourCard .th span{flex:1}
+#tourCard .th small{font-weight:700;letter-spacing:.06em;font-size:12px;opacity:.75}
+#tourCard .tx{padding:10px 12px 4px}
+#tourCard .tx p{margin:0 0 8px}
+#tourCard .tx em{color:#ffb070;font-style:normal;font-weight:600}
+#tourCard .tb{display:flex;gap:6px;padding:6px 10px 10px}
+#tourCard .tb button{flex:1;min-height:36px}
+#tourCard .tb .x{flex:0 0 auto}
+#tourCard .tl{display:flex;flex-direction:column;gap:6px;padding:4px 10px 10px}
+#tourCard .tl button{text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:8px 10px}
+#tourCard .tl button i{font-style:normal;text-transform:none;letter-spacing:0;font-family:system-ui,sans-serif;font-weight:400;font-size:12px;opacity:.75}
+#tourNudge{position:fixed;z-index:998;right:12px;bottom:12px;display:flex;gap:6px;align-items:center;background:#0d0d0d;border:1.5px solid #d9d9d2;border-radius:4px;padding:6px 6px 6px 10px;font:13px system-ui,sans-serif;color:#efefe9;box-shadow:0 6px 20px #000a}
+@media (pointer:coarse){#tourNudge{bottom:calc(76px + env(safe-area-inset-bottom));left:12px;right:12px}}
+`;
+const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+const q=s=>{ for (const x of [].concat(s||[])){ let e=null; try{ e=document.querySelector(x); }catch(_){}
+    if (!e) continue; if (e.matches('input[type=file]')) e=e.closest('label')||e; return e; } return null; };
+const COL=['#9cd2e4','#e4e86c','#8ddc86','#e5463f'];
+
+// ---------- tour scripts ----------
+const has=s=>!!document.querySelector(s);
+const phone = matchMedia('(pointer:coarse)').matches;
+const tap = phone?'Tap':'Click';
+const W={}; // tours per app
+W.video=[
+ {name:'Quick start',sub:'Song in, pictures in, press play',steps:[
+  {t:'Welcome',b:`<p>This is a <em>video synth</em>: it listens to music and cuts, moves and colours pictures in time with it.</p><p>The tour points at one control at a time. You can use the real controls while it runs, and end it whenever you like.</p>`},
+  {el:'#audioFile',t:'1 · Load a song',b:`<p>${tap} <em>Load track</em> and pick a song or any sound file. Its beats and loudness drive everything.</p><p>No song? Use the mic or live input further down in this section.</p>`},
+  {el:'#mediaFile',t:'2 · Add pictures',b:`<p>Add your own <em>images or videos</em>. They go into the source pool that the synth cuts between.</p>`},
+  {el:['#genSel','#genAdd'],t:'Generative art',b:`<p>No pictures handy? Add <em>generative sources</em>: liquid light, ink bloom, moiré orbs, ribbons and more. They are drawn live and react to the music.</p>`},
+  {el:'#pool',t:'The source pool',b:`<p>Everything the synth can show. ${tap} a thumbnail to switch it on or off; the ✕ removes it.</p>`},
+  {el:['#playBtn','#mbar'],t:'3 · Play',b:`<p>Press <em>Play</em>. The picture now cuts on the beat. Space bar also plays and pauses.</p>`},
+  {el:'#preset',t:'Scenes',b:`<p>Scenes are complete looks: effects, cuts and mappings. Pick one, or press <em>Random</em> and save what you like.</p>`},
+  {el:'#stage',t:'That’s it',b:`<p>Next, try the <em>Sampler</em> tour to chop up your own clips, or <em>Record & render</em> to save a video. The Tour button at the top brings this back.</p>`}]},
+ {name:'Sampler',sub:'Chop a clip at its hits',steps:[
+  {el:'#vsmSec',t:'Sampler',b:`<p>Load a video or a sound and it gets <em>cut into slices at its hits</em>. The music then plays the slices: picture, sound or both.</p>`},
+  {el:'#vsmFile1',t:'Load a clip',b:`<p>Pick a video or sound file from your ${phone?'phone':'computer'}.</p>`},
+  {el:'#vsmRec1',t:'…or record one',b:phone?`<p><em>Record</em> opens your camera app. Film a few seconds, keep it, and it comes back already sliced.</p>`:`<p><em>Record</em> films from your webcam and mic right here. Press it again to stop.</p>`},
+  {el:'[data-vslot="1"] [data-v="out"]',t:'Plays',b:`<p>Choose what each slice plays: <em>video + sound</em>, video only, or sound only.</p>`},
+  {el:'#vsmStrip1',t:'The slices',b:`<p>Each mark is a cut. Raise <em>Slice sensitivity</em> for more cuts; <em>Played by</em> sets what triggers them.</p>`},
+  {el:'#vsmAdd',t:'More samplers',b:`<p>Add up to three samplers, each with its own clip, volume and mute.</p>`}]},
+ {name:'Effects & mapping',sub:'Decide what the sound moves',steps:[
+  {el:'#maps',t:'Sound → visual mapping',b:`<p>Each row links a <em>sound feature</em> (bass, loudness, beat…) to a <em>picture setting</em>. Change the source and the amount to taste.</p>`},
+  {el:'#modVfb',t:'Video feedback',b:`<p>Feeds the picture back into itself for trails, tunnels and smears. Switch it on and push the mix.</p>`},
+  {el:'#modEcho',t:'Delay / echo',b:`<p>Repeats earlier frames in time with the beat.</p>`},
+  {el:'details.mod2',t:'More looks',b:`<p>Lens, pixel drift, analog video and motion effects live in these folds. ${tap} one open to explore.</p>`}]},
+ {name:'Record & render',sub:'Save a video',steps:[
+  {el:'#recBtn',t:'Record live',b:`<p><em>Record</em> captures what you see and hear in real time, tweaks included. Good for jams.</p>`},
+  {el:'#rSize',t:'Offline render',b:`<p>For a clean, full-quality video of the whole song. Pick a size: <em>quick preview</em> sizes are fastest, 4K is slowest.</p>`},
+  {el:'#rName',t:'Name it',b:`<p>Type a file name.</p>`},
+  {el:'#renderBtn',t:'Render',b:`<p>${window.showSaveFilePicker?'You choose where to save first, then it renders straight into that file.':'The video is saved to your Downloads folder when it finishes.'} You can cancel at any time.</p>`}]},
+ {name:'Live performance',sub:'Play it like an instrument',steps:[
+  {el:'#perf',t:'Live performance',b:`<p>Buttons for playing live: <em>Cut</em>, <em>Flash</em>, tap tempo, master intensity and quick scenes.</p>`},
+  {el:'#tapBtn',t:'Tap tempo',b:`<p>Tap along with live music so the cuts lock to the band.</p>`},
+  {el:['#outWinBtn','#midiBtn'],t:'Second screen & MIDI',b:`<p>Open the picture in its own window for a projector, and map any control to a MIDI controller.</p>`}]}
+];
+W.audio=[
+ {name:'Quick start',sub:'Picture in, music out',steps:[
+  {t:'Welcome',b:`<p>This is an <em>audio synth that reads pictures</em>. A scan line sweeps the image: bright spots become notes, colour picks the chords, movement plays the drums.</p><p>Use the real controls while the tour runs, and end it any time.</p>`},
+  {el:['#bigStart','#startBtn'],t:'1 · Start sound',b:`<p>Browsers need one ${tap.toLowerCase()} before they make sound. Press <em>Start</em>.</p>`},
+  {el:'#demoSel',t:'2 · Pick a picture',b:`<p>Try a demo picture, or load your own below.</p>`},
+  {el:['#mediaFile','#camBtn'],t:'Your images, video or camera',b:`<p>Load an image or video, or turn on the <em>webcam</em> and play music by moving.</p>`},
+  {el:'#meters',t:'What it sees',b:`<p>These meters show what the synth reads from the picture: brightness, colour, detail, motion and more.</p>`},
+  {el:['#keySel','#scaleSel'],t:'Key & scale',b:`<p>Every note stays in this key and scale, so it always sounds musical.</p>`},
+  {el:'[data-mod="arp"]',t:'Voices',b:`<p>Each voice can be switched on and shaped: image score, pad, spectral scanner, drums and noise.</p>`},
+  {el:'#sceneBtns',t:'Scenes',b:`<p>Jump between complete sounds here, and save your own.</p>`}]},
+ {name:'Sampler',sub:'Chop a sound at its hits',steps:[
+  {el:'[data-mod="smp"]',t:'Sampler',b:`<p>Load a sound and it gets <em>cut at its hits</em>; the picture then plays the slices.</p>`},
+  {el:'#smpFile',t:'Load audio',b:`<p>Any loop, beat or recording works. Videos work too: their sound is used.</p>`},
+  {el:'#smpRec',t:'Record',b:phone?`<p>Opens your camera app; film a few seconds and the sound comes back sliced.</p>`:`<p>Records from your microphone. Press again to stop.</p>`},
+  {el:'#smpWave',t:'Slices',b:`<p>The waveform with its cuts. ${tap} it to hear a slice.</p>`},
+  {el:'#smpAdd',t:'More samplers',b:`<p>Add up to three samplers.</p>`}]},
+ {name:'Record & MIDI',sub:'Save audio or video',steps:[
+  {el:'#recWav',t:'Record WAV',b:`<p>Records the sound as a high-quality WAV file.</p>`},
+  {el:'#recClip',t:'Record clip',b:`<p>Records the picture and sound together as a video.</p>`},
+  {el:'#midiBtn',t:'MIDI out',b:`<p>Sends the notes to other synths or your DAW (desktop Chrome or Edge).</p>`}]}
+];
+W.combo=[
+ {name:'The loop',sub:'How sound and visuals feed each other',steps:[
+  {t:'Welcome',b:`<p>The <em>Feedback Synth</em> joins two instruments: a synth that plays music from pictures, and a video synth that makes pictures from music. Here they listen to each other.</p><p>Use the real controls while the tour runs, and end it any time.</p>`},
+  {el:'.tabs',t:'Three tabs',b:`<p><em>Loop</em> wires the two together. <em>Sound</em> is the music synth. <em>Visuals</em> is the video synth.</p>`},
+  {el:'#goBtn',tab:'loop',t:'1 · Start the loop',b:`<p>Press this to start both at once.</p>`},
+  {el:'#listen',tab:'loop',t:'Sound → visuals',b:`<p>What the visuals listen to: the synth, a track, live input, or all of them.</p>`},
+  {el:'#look',tab:'loop',t:'Visuals → sound',b:`<p>What the synth looks at: its own picture, the visuals' output, or a mix. Turn it towards the visuals to close the loop.</p>`},
+  {el:'#eyes',tab:'loop',t:'What the synth sees',b:`<p>A live view of the picture the synth is reading as a score.</p>`},
+  {el:'#lsceneBtns',tab:'loop',t:'Linked scenes',b:`<p>Each scene sets sound and visuals together. Try a few.</p>`}]},
+ {name:'Sound tab',sub:'The music synth',steps:[
+  {el:'#as-mediaFile',tab:'sound',t:'Picture input',b:`<p>Give the synth its own picture, video or webcam. It plays the bright spots, colours and motion.</p>`},
+  {el:'#as-meters',tab:'sound',t:'What it reads',b:`<p>Brightness, colour, detail and motion, as the synth sees them.</p>`},
+  {el:'[data-mod="arp"]',tab:'sound',t:'Voices',b:`<p>Image score, pad, spectral scanner, drums and noise. Switch each on and shape it.</p>`},
+  {el:'[data-mod="smp"]',tab:'sound',t:'Sampler',b:`<p>Load or record a sound and it gets cut at its hits; the picture plays the slices.</p>`}]},
+ {name:'Visuals tab',sub:'The video synth',steps:[
+  {el:'#audioFile',tab:'visuals',t:'A track (optional)',b:`<p>Load a song if you want the visuals to follow it as well as the synth.</p>`},
+  {el:'#mediaFile',tab:'visuals',t:'Pictures',b:`<p>Add images or videos for the visuals to cut between.</p>`},
+  {el:['#genSel','#genAdd'],tab:'visuals',t:'Generative art',b:`<p>Or add generative sources: liquid light, ink, orbs, ribbons…</p>`},
+  {el:'#vsmSec',tab:'visuals',t:'Sampler (video + sound)',b:`<p>Load or record a clip; it is cut at its hits and plays picture, sound or both.</p>`},
+  {el:'#maps',tab:'visuals',t:'Mapping',b:`<p>Choose which sound feature moves which picture setting.</p>`}]},
+ {name:'Record & render',sub:'Save what you made',steps:[
+  {el:'#lRecVid',tab:'loop',t:'Record video',b:`<p>Records the visuals with the sound, live.</p>`},
+  {el:'#lRecWav',tab:'loop',t:'Record WAV',b:`<p>Records just the sound.</p>`},
+  {el:'#rSize',tab:'visuals',t:'Offline render',b:`<p>Renders a track's visuals at full quality (desktop Chrome or Edge). Quick preview sizes are fastest.</p>`}]}
+];
+let TOURS=null; const kindNow=()=>has('.tabs [data-tab="loop"]') ? 'combo' : has('#vsmSec') ? 'video' : 'audio';
+
+// ---------- player ----------
+let spot, card, cur=null, idx=0, raf=0, target=null;
+const mk=(id,html)=>{ const d=document.createElement('div'); d.id=id; if(html) d.innerHTML=html; document.body.appendChild(d); return d; };
+function ensure(){ if (spot) return; spot=mk('tourSpot'); card=mk('tourCard');
+  addEventListener('keydown',e=>{ if (!cur) return; if (e.key==='Escape') end(); else if (e.key==='ArrowRight') go(1); else if (e.key==='ArrowLeft') go(-1); }); }
+function openFold(el){ // mobile: open a folded section that hides el
+  if (!el.closest) return; let s=el.closest('.m-hide'); if (!s) return;
+  let h=s.previousElementSibling; while (h && h.tagName!=='H2') h=h.previousElementSibling; if (h && h.classList.contains('m-closed')) h.click(); }
+function place(){ if (!cur) return; const pad=6, vw=innerWidth, vh=innerHeight;
+  let r=null; if (target && target.isConnected){ const b=target.getBoundingClientRect(); if (b.width||b.height) r=b; }
+  if (r){ spot.style.display='block'; Object.assign(spot.style,{left:(r.left-pad)+'px',top:(r.top-pad)+'px',width:(r.width+pad*2)+'px',height:(r.height+pad*2)+'px'}); }
+  else { spot.style.display='block'; Object.assign(spot.style,{left:(vw/2)+'px',top:(vh/2)+'px',width:'0px',height:'0px'}); }
+  const cw=card.offsetWidth, ch=card.offsetHeight; let x,y;
+  if (!r){ x=(vw-cw)/2; y=(vh-ch)/2; }
+  else { const below=vh-r.bottom, above=r.top, right=vw-r.right;
+    if (!phone && right>cw+24){ x=r.right+16; y=Math.min(Math.max(12,r.top),vh-ch-12); }
+    else if (below>ch+20){ x=Math.min(Math.max(12,r.left),vw-cw-12); y=r.bottom+14; }
+    else if (above>ch+20){ x=Math.min(Math.max(12,r.left),vw-cw-12); y=r.top-ch-14; }
+    else { x=(vw-cw)/2; y=below>above? vh-ch-12 : 12; } }
+  card.style.left=Math.round(x)+'px'; card.style.top=Math.round(y)+'px'; }
+function loop(){ place(); raf=requestAnimationFrame(loop); }
+function show(dir){ const tour=cur, s=tour.steps[idx];
+  if (s.tab){ const tb=document.querySelector('.tabs button[data-tab="'+s.tab+'"]'); if (tb && !tb.classList.contains('on')) tb.click(); }
+  target=s.el?q(s.el):null; if (target) openFold(target);
+  if (s.el && (!target || !target.getClientRects().length)){ const nx=idx+(dir<0?-1:1); if (nx>=0 && nx<tour.steps.length){ idx=nx; return show(dir); } if (dir>=0 && idx>0) return menu(true); }
+  if (target) target.scrollIntoView({block:'center',behavior:'smooth'});
+  const last=idx===tour.steps.length-1;
+  card.style.setProperty('--tc',COL[TOURS.indexOf(tour)%COL.length]);
+  card.innerHTML=`<div class="th"><span>${s.t}</span><small>${idx+1} / ${tour.steps.length}</small></div><div class="tx">${s.b}</div>
+   <div class="tb"><button class="x" data-a="end" title="End the tour">✕ End</button>${idx?'<button data-a="back">Back</button>':''}<button class="primary" data-a="next">${last?'Finish':'Next'}</button></div>`;
+  card.style.display='block'; card.querySelector('[data-a=next]').focus({preventScroll:true}); }
+function go(d){ if (!cur) return; idx+=d; if (idx<0) idx=0; if (idx>=cur.steps.length) return menu(true); show(d); }
+function start(i){ ensure(); cur=TOURS[i]; idx=0; LS.set('em-tour-seen','1'); nudgeOff(); show(); cancelAnimationFrame(raf); loop(); }
+function end(){ cur=null; target=null; cancelAnimationFrame(raf); if (spot){ spot.style.display='none'; card.style.display='none'; } }
+function menu(done){ ensure(); end(); nudgeOff(); LS.set('em-tour-seen','1');
+  card.style.setProperty('--tc','#e5463f');
+  card.innerHTML=`<div class="th"><span>${done?'Nice! Another tour?':'Guided tours'}</span></div><div class="tx"><p>Pick a walkthrough. You can use the controls as you go, and end it any time with ✕ or Esc.</p></div>
+   <div class="tl">${TOURS.map((t,i)=>`<button data-i="${i}">${t.name}<i>${t.sub}</i></button>`).join('')}</div>
+   <div class="tb"><button class="x" data-a="end">Close</button></div>`;
+  card.style.display='block'; spot.style.display='none'; target=null;
+  const vw=innerWidth, vh=innerHeight; card.style.left=Math.round((vw-card.offsetWidth)/2)+'px'; card.style.top=Math.round(Math.max(12,(vh-card.offsetHeight)/2))+'px'; }
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#tourCard button'); if (!b) return;
+  if (b.dataset.i!=null) return start(+b.dataset.i); const a=b.dataset.a; if (a==='end') end(); else if (a==='next') go(1); else if (a==='back') go(-1); });
+let nudge=null; function nudgeOff(){ if (nudge){ nudge.remove(); nudge=null; } }
+function init(){ const panel=document.getElementById('panel'); if (!panel || document.getElementById('tourBtn')) return; TOURS=W[kindNow()];
+  const b=document.createElement('button'); b.id='tourBtn'; b.innerHTML='<b>?</b> Tour &amp; tutorials'; b.onclick=()=>menu(false);
+  const h1=panel.querySelector('h1'); if (h1) h1.after(b); else panel.prepend(b);
+  if (!LS.get('em-tour-seen')){ nudge=mk('tourNudge','<span>New here? Take a quick tour.</span><button class="primary">Show me</button><button>✕</button>');
+    const [y,n]=nudge.querySelectorAll('button'); y.onclick=()=>menu(false); n.onclick=()=>{ LS.set('em-tour-seen','1'); nudgeOff(); }; } }
+window.EM_tour={menu,start,end};
+if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(init,50)); else setTimeout(init,50);
+})();
 </script>
 <!--/vt-->
 </head>
