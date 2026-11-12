@@ -261,10 +261,11 @@ input[type=range]:focus{outline:none} input[type=range]:focus-visible::-webkit-s
   const add=()=>{ const panel=document.getElementById('panel'); if (!panel || document.getElementById('synthSw')) return;
     const path=location.pathname, sub=/\/(audio-synth|video-synth|mixing)\//.exec(path), here=window.EM_view||(document.getElementById('mxSec')||/mixing/i.test(document.title)?'mixing':sub?sub[1].replace('-synth',''):(document.querySelector('.tabs [data-tab="loop"]')?'feedback':(document.getElementById('vsmSec')?'video':'audio')));
     const mode=/mobile/i.test(path.split('/').pop())||document.body.classList.contains('mobile')?'mobile':'desktop', root=sub?'../':'';
-    const L=[['home','Home',root+'index.html'],['feedback','Feedback',root+mode+'.html'],['audio','Audio',root+'audio-synth/'+mode+'.html'],['video','Video',root+'video-synth/'+mode+'.html'],['mixing','Mixing',root+'mixing/'+mode+'.html']];
+    const L=[['home',window.EM_about?'About':'Home',root+'index.html'],['feedback','Feedback',root+mode+'.html'],['audio','Audio',root+'audio-synth/'+mode+'.html'],['video','Video',root+'video-synth/'+mode+'.html'],['mixing','Mixing',root+'mixing/'+mode+'.html']];
     const nav=document.createElement('nav'); nav.id='synthSw'; nav.setAttribute('aria-label','Switch synth');
     nav.innerHTML=L.map(([k,t,h])=>`<a href="${h}" data-k="${k}"${k===here?' class="on" aria-current="page"':''}>${t}</a>`).join('');
-    nav.addEventListener('click',e=>{ const a=e.target.closest('a'); if (!a) return; e.preventDefault(); if (a.classList.contains('on')) return;
+    nav.addEventListener('click',e=>{ const a=e.target.closest('a'); if (!a) return; e.preventDefault(); if (a.classList.contains('on') && !(window.EM_about && a.dataset.k==='home')) return;
+      if (window.EM_about && a.dataset.k==='home'){ EM_about(); return; }
       if (window.EM_setView && a.dataset.k!=='home'){ EM_setView(a.dataset.k); return; }
       if (!confirm('Switch to '+(a.dataset.k==='home'?'the home page':'the '+a.textContent+' synth')+'? Files you loaded here will need loading again.')) return;
       location.href=a.getAttribute('href'); });
@@ -6200,6 +6201,83 @@ function stageFrame(){
 const pf=window.EM_postFrame; window.EM_postFrame=(...a)=>{ if (pf) pf(...a); stageFrame(); };
 const rc=window.EM_recCanvas; window.EM_recCanvas=()=>{ if (view==='audio' && st){ stageFrame(); return st; } return rc?rc():canvas; };
 
+
+// ---- About: the home page as a panel over the rig (nothing stops) ----
+const ABOUT_CSS=`#emAbout{position:fixed;inset:0;z-index:9000;overflow:auto;background:#000d;-webkit-overflow-scrolling:touch;display:none;--ink:#111;--paper:#efefe9;--blu:#9cd2e4;--yel:#e4e86c;--grn:#8ddc86;--red:#e5463f;--f:'Barlow Condensed','Arial Narrow',sans-serif}
+#emAbout.on{display:block}
+#emAbout *{box-sizing:border-box}
+#emAbout .case{position:relative;max-width:980px;margin:20px auto;padding:14px;background:#151515 repeating-linear-gradient(90deg,#0000 0 3px,#ffffff04 3px 4px);border:3px solid #000;border-radius:6px;box-shadow:0 0 0 2px #2a2a2a,0 18px 40px #000;color:var(--paper);font:16px/1.4 system-ui,-apple-system,sans-serif}
+@media (max-width:640px){#emAbout .case{margin:0;border-radius:0;border-width:0 0 3px;padding:max(12px,env(safe-area-inset-top)) 12px 16px}}
+#emAbout .brand{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;background:var(--blu);color:var(--ink);padding:12px 16px 10px;border-radius:2px;margin-bottom:12px}
+#emAbout .brand h1{margin:0;font-family:var(--f);font-weight:800;font-size:clamp(28px,6vw,52px);line-height:.9;text-transform:uppercase;color:var(--ink);background:none;padding:0;border:0}
+#emAbout .brand h1 span{font-weight:300;color:var(--ink)}
+#emAbout .brand .sub{font-family:var(--f);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:clamp(11px,1.8vw,16px);line-height:1.05;text-align:right}
+#emAbout .intro{font-family:var(--f);text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:#b4b4ac;margin:0 2px 12px}
+#emAbout .rack{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:980px){#emAbout .rack{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){#emAbout .rack{grid-template-columns:1fr}}
+#emAbout .mod{border-radius:3px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px;color:var(--ink)}
+#emAbout .mod.y{background:var(--yel)} #emAbout .mod.b{background:var(--blu)} #emAbout .mod.g{background:var(--grn)} #emAbout .mod.r{background:var(--red)}
+#emAbout .mod h2{margin:0;font-family:var(--f);font-weight:800;font-size:24px;letter-spacing:.12em;text-transform:uppercase;text-align:center;color:var(--ink);background:none;border:0;padding:0}
+#emAbout .mod p{margin:0;font-family:var(--f);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:14px;line-height:1.25;text-align:center;min-height:2.5em}
+#emAbout .pnl{display:flex;align-items:center;justify-content:space-around;padding:4px 0}
+#emAbout .jack{display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--f);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+#emAbout .jack i{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle,#000 0 34%,#8d8d86 36% 48%,#d8d8d0 52% 62%,#2a2a2a 66%);box-shadow:0 1px 2px #0008}
+#emAbout .knob{display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--f);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+#emAbout .knob b{position:relative;width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#f4f4ee 0 30%,#bdbdb4 31% 33%,#1b1b1b 34% 100%);box-shadow:0 3px 6px #000a,inset 0 0 0 2px #2c2c2c;transform:rotate(var(--r,30deg));transition:transform .5s cubic-bezier(.3,1.6,.5,1)}
+#emAbout .knob b::after{content:'';position:absolute;left:50%;top:5px;width:3px;height:16px;margin-left:-1.5px;background:#f4f4ee;border-radius:2px}
+#emAbout .mod:hover .knob b{transform:rotate(calc(var(--r,30deg) + 90deg))}
+#emAbout .go{width:100%;padding:12px 8px;font-family:var(--f);font-weight:700;font-size:17px;letter-spacing:.1em;text-transform:uppercase;color:#f1f1ea;background:linear-gradient(#2b2b2b,#141414);border:1px solid #000;border-radius:3px;box-shadow:inset 0 1px 0 #ffffff26,0 2px 0 #000;cursor:pointer}
+#emAbout .go.cur{background:radial-gradient(circle at 50% 40%,#f4ffd0,#c9ef8a 70%);color:#111;box-shadow:0 0 12px #d4ff8a99,inset 0 0 0 1px #fff8,0 2px 0 #000}
+#emAbout .keys{position:relative;display:flex;height:92px;margin-top:14px;padding:8px 8px 0;background:#0b0b0b;border-radius:2px;overflow:hidden}
+#emAbout .wk{flex:1;margin:0 1px;background:linear-gradient(#f6f6f0,#e2e2da);border-radius:0 0 3px 3px;box-shadow:inset 0 -4px 0 #c8c8c0;cursor:pointer}
+#emAbout .wk.down{background:#d6d6cd;box-shadow:inset 0 -1px 0 #c8c8c0}
+#emAbout .bk{position:absolute;top:8px;width:calc((100% - 16px)/var(--n)*.6);height:56%;background:linear-gradient(#2a2a2a,#050505);border-radius:0 0 2px 2px;box-shadow:0 2px 2px #000;cursor:pointer;z-index:1}
+#emAbout .bk.down{background:#3a3a3a}
+#emAbout .foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px;font-family:var(--f);text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:#8c8c86}
+#emAbout .foot a{color:#b4b4ac}
+#emAbout .x{position:absolute;right:20px;top:22px;z-index:2;font-family:var(--f);font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:#111;color:#f1f1ea;border:1px solid #000;border-radius:3px;padding:6px 10px;cursor:pointer}
+@media (max-width:640px){#emAbout .x{top:max(18px,calc(env(safe-area-inset-top) + 6px))}}
+#emAbout .brand{padding-right:90px}`;
+const MODS=[['feedback','b','Feedback','Sound and visuals wired into each other, in one loop.','Sound in','Loop','Video out','-40deg'],
+ ['audio','y','Audio','Pictures, video or your camera turned into music.','Picture in','Score','Sound out','20deg'],
+ ['video','g','Video','Your track turned into visuals that cut and move with the sound.','Sound in','Cut','Video out','70deg'],
+ ['mixing','r','Mixing','A console and video mixer for the whole rig, moved by the synths.','All in','Master','Program','-70deg']];
+let ab=null;
+function aboutBuild(){
+  const st=document.createElement('style'); st.textContent=ABOUT_CSS; document.head.appendChild(st);
+  ab=document.createElement('div'); ab.id='emAbout'; ab.setAttribute('role','dialog'); ab.setAttribute('aria-label','About Electric Mountain');
+  ab.innerHTML=`<div class="case"><button class="x" data-a="close">✕ Close</button>
+  <header class="brand"><h1>Electric <span>Mountain</span></h1><div class="sub">Audio-visual<br>synthesizers</div></header>
+  <p class="intro">Three instruments and a mixing desk in one rig. Switching devices keeps everything playing. Nothing is uploaded: your files and camera stay on your device.</p>
+  <div class="rack">${MODS.map(([k,c,n,d,a,kn,o,r])=>`<section class="mod ${c}"><h2>${n}</h2><p>${d}</p><div class="pnl"><span class="jack"><i></i>${a}</span><span class="knob"><b style="--r:${r}"></b>${kn}</span><span class="jack"><i></i>${o}</span></div><button class="go" data-v="${k}">Open</button></section>`).join('')}</div>
+  <div class="keys" aria-hidden="true"></div>
+  <div class="foot"><span>Tap the keys · they play through the console</span><a href="${root}index.html" data-a="home">Full home page (leaves the rig)</a></div></div>`;
+  document.body.appendChild(ab);
+  ab.addEventListener('click',e=>{ const b=e.target.closest('[data-v],[data-a]'); if (!b){ if (e.target===ab) aboutClose(); return; }
+    if (b.dataset.v){ setView(b.dataset.v); aboutClose(); }
+    else if (b.dataset.a==='close') aboutClose();
+    else if (b.dataset.a==='home'){ e.preventDefault(); if (confirm('Leave the rig for the home page? Sound stops and files you loaded will need loading again.')) location.href=b.getAttribute('href'); } });
+  addEventListener('keydown',e=>{ if (e.key==='Escape' && ab.classList.contains('on')) aboutClose(); });
+  // the little keyboard, played through the console when the rig's audio is up
+  const K=ab.querySelector('.keys'), N=innerWidth<640?15:22, BL=[1,1,0,1,1,1,0], midi=[0,2,4,5,7,9,11]; let own=null;
+  K.style.setProperty('--n',N);
+  const play=m=>{ try{ const ctx=(typeof actx!=='undefined'&&actx)||(own=own||new (window.AudioContext||window.webkitAudioContext)()); ctx.resume();
+      const t=ctx.currentTime, f=440*Math.pow(2,(m-69)/12), o=ctx.createOscillator(), o2=ctx.createOscillator(), lp=ctx.createBiquadFilter(), g=ctx.createGain();
+      o.type='sawtooth'; o2.type='square'; o.frequency.value=f; o2.frequency.value=f*.5; o2.detune.value=7;
+      lp.type='lowpass'; lp.Q.value=8; lp.frequency.setValueAtTime(f*8,t); lp.frequency.exponentialRampToValueAtTime(f*1.2,t+.5);
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.18,t+.01); g.gain.exponentialRampToValueAtTime(.001,t+.9);
+      o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(ctx.destination); o.start(t); o2.start(t); o.stop(t+1); o2.stop(t+1); }catch(e){} };
+  const press=(el,m)=>{ el.classList.add('down'); play(m); setTimeout(()=>el.classList.remove('down'),180); };
+  for (let i=0;i<N;i++){ const w=document.createElement('div'); w.className='wk'; const m=48+12*Math.floor(i/7)+midi[i%7];
+    w.addEventListener('pointerdown',e=>{ e.preventDefault(); press(w,m); }); K.appendChild(w);
+    if (BL[i%7] && i<N-1){ const b=document.createElement('div'); b.className='bk'; b.style.left='calc(8px + (100% - 16px)/'+N+'*'+(i+1)+' - (100% - 16px)/'+N+'*.3)';
+      b.addEventListener('pointerdown',e=>{ e.preventDefault(); press(b,m+1); }); K.appendChild(b); } }
+}
+function aboutOpen(){ if (!ab) aboutBuild(); ab.querySelectorAll('.go').forEach(b=>{ const c=b.dataset.v===view; b.classList.toggle('cur',c); b.textContent=c?'You are here':'Open'; });
+  ab.classList.add('on'); ab.scrollTop=0; const a=document.querySelector('#synthSw a[data-k="home"]'); if (a) a.classList.add('on'); }
+function aboutClose(){ if (ab) ab.classList.remove('on'); const a=document.querySelector('#synthSw a[data-k="home"]'); if (a) a.classList.remove('on'); }
+window.EM_about=aboutOpen;
 // ---- views ----
 function tabBtns(){ return [...document.querySelectorAll('.tabs button[data-tab]')]; }
 function setView(v, first){
@@ -6211,7 +6289,7 @@ function setView(v, first){
   document.title='Electric Mountain '+V.name+(mobile?' · mobile':'');
   if (!st && v==='audio') stageFrame();
   if (v!=='audio'){ if (st) st.style.display='none'; const p=$r('vxPgm'); if (p) p.style.visibility=''; if (typeof canvas!=='undefined' && !(p && p.style.display!=='none')) canvas.style.visibility=''; }
-  document.querySelectorAll('#synthSw a').forEach(a=>{ const on=a.dataset.k===v; a.classList.toggle('on',on); if (on) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  document.querySelectorAll('#synthSw a').forEach(a=>{ const on=a.dataset.k===v||(a.dataset.k==='home'&&ab&&ab.classList.contains('on')); a.classList.toggle('on',on); if (on) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
   LSs('emrig-view',v);
   if (!first && isSite){ try{ history.replaceState(null,'',root+V.dir+(mobile?'mobile.html':'desktop.html')+location.search.replace(/([?&])view=[^&]*&?/,'$1').replace(/[?&]$/,'')); }catch(e){} }
 }
