@@ -22,14 +22,14 @@ a.back{background:none;border:0;box-shadow:none;padding:4px 0;font-size:14px;col
 <main>
   <h1>Electric Mountain <span>Audio Synth</span></h1>
   <p>Pictures, video or your camera turned into music. Opening the right version for this device…</p>
-  <a id="phone" href="mobile.html?v=20261112c">Phone / tablet version</a>
-  <a id="desk" href="desktop.html?v=20261112c">Desktop version</a>
+  <a id="phone" href="mobile.html?v=20261112d">Phone / tablet version</a>
+  <a id="desk" href="desktop.html?v=20261112d">Desktop version</a>
   <a class="back" href="../">All Electric Mountain synths</a>
 </main>
 <script>
 const phone = matchMedia('(pointer:coarse)').matches && Math.min(screen.width, screen.height) < 900;
 document.getElementById(phone ? 'phone' : 'desk').classList.add('main');
-if (!location.hash) setTimeout(()=>location.replace((phone ? 'mobile.html' : 'desktop.html')+'?v=20261112c'), 600);
+if (!location.hash) setTimeout(()=>location.replace((phone ? 'mobile.html' : 'desktop.html')+'?v=20261112d'), 600);
 </script>
 </body>
 </html>
