@@ -17,11 +17,12 @@ html,body{margin:0;min-height:100%;background:#050505;color:var(--paper);font:16
 .brand h1 span{font-weight:300}
 .brand .sub{font-family:var(--f);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:clamp(11px,1.8vw,16px);line-height:1.05;text-align:right}
 .intro{font-family:var(--f);text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:#b4b4ac;margin:0 2px 12px}
-.rack{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media (max-width:760px){.rack{grid-template-columns:1fr}}
+.rack{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:980px){.rack{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.rack{grid-template-columns:1fr}}
 .mod{border-radius:3px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px;color:var(--ink)}
 .mod.k{background:#0d0d0d;color:var(--paper);border:1.5px solid #d9d9d2}
-.mod.y{background:var(--yel)} .mod.b{background:var(--blu)} .mod.g{background:var(--grn)}
+.mod.y{background:var(--yel)} .mod.b{background:var(--blu)} .mod.g{background:var(--grn)} .mod.r{background:var(--red)}
 .mod h2{margin:0;font-family:var(--f);font-weight:800;font-size:24px;letter-spacing:.12em;text-transform:uppercase;text-align:center}
 .mod p{margin:0;font-family:var(--f);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:14px;line-height:1.25;text-align:center;min-height:2.5em}
 /* decorative jacks + knob */
@@ -50,25 +51,31 @@ html,body{margin:0;min-height:100%;background:#050505;color:var(--paper);font:16
 <body>
 <div class="case">
   <header class="brand"><h1>Electric <span>Mountain</span></h1><div class="sub">Audio-visual<br>synthesizers</div></header>
-  <p class="intro">Three instruments that run in the browser. Nothing is uploaded: your files and camera stay on your device.</p>
+  <p class="intro">Three instruments and a mixing desk that run in the browser. Nothing is uploaded: your files and camera stay on your device.</p>
   <div class="rack">
     <section class="mod b">
       <h2>Feedback</h2>
       <p>Sound and visuals wired into each other, in one loop.</p>
       <div class="panel"><span class="jack"><i></i>Sound in</span><span class="knob"><b style="--r:-40deg"></b>Loop</span><span class="jack"><i></i>Video out</span></div>
-      <div class="links"><a data-k="phone" href="mobile.html?v=20261112b">Phone</a><a data-k="desk" href="desktop.html?v=20261112b">Desktop</a></div>
+      <div class="links"><a data-k="phone" href="mobile.html?v=20261112c">Phone</a><a data-k="desk" href="desktop.html?v=20261112c">Desktop</a></div>
     </section>
     <section class="mod y">
       <h2>Audio</h2>
       <p>Pictures, video or your camera turned into music.</p>
       <div class="panel"><span class="jack"><i></i>Picture in</span><span class="knob"><b style="--r:20deg"></b>Score</span><span class="jack"><i></i>Sound out</span></div>
-      <div class="links"><a data-k="phone" href="audio-synth/mobile.html?v=20261112b">Phone</a><a data-k="desk" href="audio-synth/desktop.html?v=20261112b">Desktop</a></div>
+      <div class="links"><a data-k="phone" href="audio-synth/mobile.html?v=20261112c">Phone</a><a data-k="desk" href="audio-synth/desktop.html?v=20261112c">Desktop</a></div>
     </section>
     <section class="mod g">
       <h2>Video</h2>
       <p>Your track turned into visuals that cut and move with the sound.</p>
       <div class="panel"><span class="jack"><i></i>Sound in</span><span class="knob"><b style="--r:70deg"></b>Cut</span><span class="jack"><i></i>Video out</span></div>
-      <div class="links"><a data-k="phone" href="video-synth/mobile.html?v=20261112b">Phone</a><a data-k="desk" href="video-synth/desktop.html?v=20261112b">Desktop</a></div>
+      <div class="links"><a data-k="phone" href="video-synth/mobile.html?v=20261112c">Phone</a><a data-k="desk" href="video-synth/desktop.html?v=20261112c">Desktop</a></div>
+    </section>
+    <section class="mod r">
+      <h2>Mixing</h2>
+      <p>A console and video mixer for the whole rig, moved by the synths.</p>
+      <div class="panel"><span class="jack"><i></i>All in</span><span class="knob"><b style="--r:-70deg"></b>Master</span><span class="jack"><i></i>Program</span></div>
+      <div class="links"><a data-k="phone" href="mixing/mobile.html?v=20261112c">Phone</a><a data-k="desk" href="mixing/desktop.html?v=20261112c">Desktop</a></div>
     </section>
   </div>
   <div class="keys" id="keys" aria-hidden="true"></div>

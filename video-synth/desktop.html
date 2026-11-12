@@ -153,11 +153,11 @@ input[type=range]:focus{outline:none} input[type=range]:focus-visible::-webkit-s
 #panel h2.m-fold.m-closed{border-bottom:1.5px solid var(--vt-rule,#d9d9d2);border-radius:3px}
 /* synth switcher */
 #synthSw{display:flex;gap:4px;margin:0 0 8px;padding:4px;background:#000;border-radius:3px;box-shadow:inset 0 1px 3px #000,0 0 0 1px #ffffff14}
-#synthSw a{flex:1;text-align:center;padding:6px 4px;font-family:var(--vt-font);font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;color:#cfcfc8;background:linear-gradient(#262626,#121212);border-radius:2px;box-shadow:inset 0 1px 0 #ffffff1f}
+#synthSw a{flex:1;text-align:center;padding:6px 3px;font-family:var(--vt-font);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:#cfcfc8;background:linear-gradient(#262626,#121212);border-radius:2px;box-shadow:inset 0 1px 0 #ffffff1f}
 #synthSw a{display:flex;align-items:center;justify-content:center}
 #synthSw a[data-k=home]{flex:0 0 auto;padding-left:10px;padding-right:10px}
 #synthSw a.on{background:radial-gradient(circle at 50% 40%,#f4ffd0,#c9ef8a 70%);color:#111;box-shadow:0 0 8px #d4ff8a88}
-@media (pointer:coarse){#synthSw a{padding:10px 4px;font-size:14px}}
+@media (pointer:coarse){#synthSw a{padding:10px 2px;font-size:13px}}
 </style>
 <script>
 // vintage faceplates: colour some panels like a 70s synth, h2 headers take their panel's colour
@@ -174,9 +174,9 @@ input[type=range]:focus{outline:none} input[type=range]:focus-visible::-webkit-s
 // synth switcher: home-screen web apps have no browser controls, so link the synths to each other
 (function(){ if (window.__emSw) return; window.__emSw=1;
   const add=()=>{ const panel=document.getElementById('panel'); if (!panel || document.getElementById('synthSw')) return;
-    const path=location.pathname, sub=/\/(audio|video)-synth\//.exec(path), here=sub?sub[1]:(/feedback/i.test(document.title)||document.querySelector('.tabs [data-tab="loop"]')?'feedback':(document.getElementById('vsmSec')?'video':'audio'));
+    const path=location.pathname, sub=/\/(audio-synth|video-synth|mixing)\//.exec(path), here=document.getElementById('mxSec')||/mixing/i.test(document.title)?'mixing':sub?sub[1].replace('-synth',''):(document.querySelector('.tabs [data-tab="loop"]')?'feedback':(document.getElementById('vsmSec')?'video':'audio'));
     const mode=/mobile/i.test(path.split('/').pop())||document.body.classList.contains('mobile')?'mobile':'desktop', root=sub?'../':'';
-    const L=[['home','Home',root+'index.html'],['feedback','Feedback',root+mode+'.html'],['audio','Audio',root+'audio-synth/'+mode+'.html'],['video','Video',root+'video-synth/'+mode+'.html']];
+    const L=[['home','Home',root+'index.html'],['feedback','Feedback',root+mode+'.html'],['audio','Audio',root+'audio-synth/'+mode+'.html'],['video','Video',root+'video-synth/'+mode+'.html'],['mixing','Mixing',root+'mixing/'+mode+'.html']];
     const nav=document.createElement('nav'); nav.id='synthSw'; nav.setAttribute('aria-label','Switch synth');
     nav.innerHTML=L.map(([k,t,h])=>`<a href="${h}" data-k="${k}"${k===here?' class="on" aria-current="page"':''}>${t}</a>`).join('');
     nav.addEventListener('click',e=>{ const a=e.target.closest('a'); if (!a) return; e.preventDefault(); if (a.classList.contains('on')) return;
@@ -298,7 +298,22 @@ W.combo=[
   {el:'#lRecWav',tab:'loop',t:'Record WAV',b:`<p>Records just the sound.</p>`},
   {el:'#rSize',tab:'visuals',t:'Offline render',b:`<p>Renders a track's visuals at full quality (desktop Chrome or Edge). Quick preview sizes are fastest.</p>`}]}
 ];
-let TOURS=null; const kindNow=()=>has('.tabs [data-tab="loop"]') ? 'combo' : has('#vsmSec') ? 'video' : 'audio';
+W.mix=[
+ {name:'Mixing basics',sub:'The console and the video mixer',steps:[
+  {t:'Welcome to Mixing',b:`<p>Mixing runs the <em>Feedback Synth</em> inside it and adds a mixing desk: an audio console for every sound, and a video switcher for the picture.</p><p>Use the real controls while the tour runs, and end it any time.</p>`},
+  {el:'#goBtn',tab:'loop',t:'1 · Start the sound',b:`<p>Start the loop here (or load a track on the Visuals tab). Channels light up as their sound starts.</p>`},
+  {el:'#mxStrips',tab:'mix',t:'Channel strips',b:`<p>One strip per sound: synth voices, samplers, the track and clip sounds, then the <em>Master</em>. Drag a knob or fader up and down; double-tap resets it.</p>`},
+  {el:'.mxS .mxKs',tab:'mix',t:'Pan & width',b:`<p><em>Pan</em> places the sound left or right. <em>Width</em> narrows it to mono or spreads it wider than the original.</p>`},
+  {el:'.mxS .mxFW',tab:'mix',t:'Fader & meter',b:`<p>The fader sets the level (the line is 0 dB). The meter shows what comes out; red means it is hitting the top.</p>`},
+  {el:'.mxS .mxB',tab:'mix',t:'Mute & solo',b:`<p><em>M</em> mutes a channel. <em>S</em> solos it so you only hear the soloed channels.</p>`},
+  {el:'#mxEq',tab:'mix',t:'Parametric EQ',b:`<p>${tap} a strip's name to edit its EQ here. Drag the four dots to boost or cut frequencies; the knobs below set frequency, gain and width (Q).</p>`},
+  {el:'#mxAParam',tab:'mix',t:'Automation',b:`<p>Let the synths move the mix: choose a control and a signal (kick, notes, bass, picture motion…) and an amount. Negative amounts duck, so <em>Fader ← kick, −0.5</em> pumps a channel.</p>`},
+  {el:'#vxSec',tab:'mix',t:'Video mixer',b:`<p>Bus <em>A</em> is on screen (program), bus <em>B</em> is waiting (preview). Sources: the visuals, the synth's picture, a camera, a loaded clip or colour bars.</p>`},
+  {el:'#vxT',tab:'mix',t:'T-bar',b:`<p>Slide from A to B with the chosen transition: mix, wipes, iris, push, luma key or blend modes.</p>`},
+  {el:'#vxAuto',tab:'mix',t:'Cut & Auto',b:`<p><em>Cut</em> swaps instantly; <em>Auto</em> runs the transition over the length you pick. <em>Auto on the beat</em> does it every few bars by itself.</p>`},
+  {el:'#vxTSrc',tab:'mix',t:'T-bar automation',b:`<p>The T-bar can follow a signal too, for example flashing B in on every snare.</p>`}]}
+];
+let TOURS=null; const kindNow=()=>has('#mxSec') ? 'mix' : has('.tabs [data-tab="loop"]') ? 'combo' : has('#vsmSec') ? 'video' : 'audio';
 
 // ---------- player ----------
 let spot, card, cur=null, idx=0, raf=0, target=null;
